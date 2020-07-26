@@ -18,11 +18,17 @@ pub fn perspective(fov_rad: f64, aspect: f64, near: f64, far: f64) -> Matrix {
 
     let f = 1. / (fov_rad / 2.).tan();
     let range_inv = 1. / (near - far);
+    // Matrix::new(4, 4, vec![
+    //     f / aspect, 0., 0.,                             0.,
+    //     0.,         f,  0.,                             0.,
+    //     0.,         0., (near + far) * range_inv,       -1.,
+    //     0.,         0., near * far * range_inv * 2.,    0.,
+    // ]);
     Matrix::new(4, 4, vec![
-        f / aspect, 0., 0.,                             0.,
-        0.,         f,  0.,                             0.,
-        0.,         0., (near + far) * range_inv,       -1.,
-        0.,         0., near * far * range_inv * 2.,    0.,
+        f / aspect, 0.,      0.,                             0.,
+        0.,         f,       0.,                             0.,
+        0.,         0.,      (near + far) * range_inv,       near * far * range_inv * 2.,
+        0.,         0.,      -1.,                            0.,
     ])
 
 }

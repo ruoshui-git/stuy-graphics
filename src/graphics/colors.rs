@@ -12,6 +12,18 @@ pub struct RGB {
 
 // Constructor and some useful "constants"
 impl RGB {
+    const WHITE: RGB = RGB {
+        red: 255,
+        blue: 255,
+        green: 255
+    };
+
+    const BLACK: RGB = RGB {
+        red: 0,
+        blue: 0,
+        green: 0,
+    };
+
     pub fn gray(depth: u16) -> Self {
         RGB {
             red: depth,
@@ -79,4 +91,8 @@ fn fmin2(a: f64, b: f64, prec: i32) -> f64 {
 
 fn fmin3(a: f64, b: f64, c: f64, prec: i32) -> f64 {
     fmin2(fmin2(a, b, prec), c, prec)
+}
+
+impl From<Vec3> for RGB {
+    
 }

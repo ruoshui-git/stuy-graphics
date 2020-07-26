@@ -7,19 +7,16 @@ use crate::graphics::{
     RGB,
 };
 use std::io;
+use super::lights::LightConfig;
 
 // turtle will cause problems
 // mod turtle;
 
 pub trait Canvas {
     /// Plot a point on the screen at (`x`, `y`, `z`)
-    fn plot(&mut self, x: i32, y: i32, z: f64);
+    fn plot(&mut self, x: i32, y: i32, z: f64, color: RGB);
 
     // fn index(&self, x: i32, y: i32) -> Option<usize>;
-    fn set_fg_color(&mut self, color: RGB);
-    fn set_bg_color(&mut self, color: RGB);
-    fn get_fg_color(&self) -> RGB;
-    fn get_bg_color(&self) -> RGB;
     fn width(&self) -> u32;
     fn height(&self) -> u32;
     fn save(&self, filepath: &str) -> io::Result<()>;
@@ -36,7 +33,7 @@ pub trait Canvas {
     /// Draw a line from (x0, y0) to (x1, y1)
     /// #### impl note:
     ///    Always add 2A or 2B when updating D. Half of that value will distort line
-    fn draw_line(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64)) {
+    fn draw_line(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64), color: RGB) {
         // swap variables if needed, since we are always going from left to right
         let (p0, p1) = if p0.0 > p1.0 { (p1, p0) } else { (p0, p1) };
 
@@ -60,7 +57,7 @@ pub trait Canvas {
             let mut z = z0;
             let z_inc = dz / -ndx as f64;
             for x in x0..=x1 {
-                self.plot(x, y0, z);
+                self.plot(x, y0, z, color);
                 z += z_inc;
             }
             return;
@@ -73,7 +70,7 @@ pub trait Canvas {
             let mut z = z0;
             let z_inc = dz / dy as f64;
             for y in y0..=y1 {
-                self.plot(x0, y, z);
+                self.plot(x0, y, z, color);
                 z += z_inc;
             }
 
@@ -100,7 +97,7 @@ pub trait Canvas {
             let mut z = z0;
             let z_inc = dz / -ndx as f64;
             for x in x0..=x1 {
-                self.plot(x, y, z);
+                self.plot(x, y, z, color);
                 if d > 0 {
                     y += y_inc;
                     d += 2 * ndx;
@@ -128,7 +125,7 @@ pub trait Canvas {
             // dz might be flipped, so recalculate
             let z_inc = (dz) / (y1 - y0) as f64;
             for y in ystart..=yend {
-                self.plot(x, y, z);
+                self.plot(x, y, z, color);
                 if d > 0 {
                     x += x_inc;
                     d -= 2 * dy;
@@ -149,11 +146,12 @@ pub trait Canvas {
         point: (f64, f64, f64),
         angle_degrees: f64,
         mag: f64,
+        color: RGB,
     ) -> (f64, f64, f64) {
         let (dx, dy) = polar_to_xy(mag, angle_degrees);
         let (x1, y1, z) = (point.0 + dx, point.1 + dy, point.2);
 
-        self.draw_line(point, (x1, y1, z));
+        self.draw_line(point, (x1, y1, z), color);
         return (x1, y1, z);
     }
 
@@ -162,7 +160,7 @@ pub trait Canvas {
     /// Draws an edge matrix
     ///
     /// Number of edges must be a multiple of 2
-    fn render_edge_matrix(&mut self, m: &Matrix) {
+    fn render_edge_matrix(&mut self, m: &Matrix, color: RGB) {
         let mut iter = m.iter_by_row();
         while let Some(point) = iter.next() {
             let p0 = (point[0], point[1], point[2]);
@@ -171,38 +169,35 @@ pub trait Canvas {
                 None => panic!("Number of edges must be a multiple of 2"),
             };
 
-            self.draw_line(p0, p1);
+            self.draw_line(p0, p1, color);
         }
     }
 
-    fn render_ndc_edges_n1to1(&mut self, m: &Matrix) {
-        let map_width = mapper(-1., 1., 0., self.width() as f64);
-        let map_height = mapper(-1., 1., 0., self.height() as f64);
-        let mut iter = m.iter_by_row();
-        while let Some(point) = iter.next() {
-            let (x0, y0, z0) = (point[0], point[1], point[2]);
-            let (x1, y1, z1) = match iter.next() {
-                Some(p1) => (p1[0], p1[1], p1[2]),
-                None => panic!("Number of edges must be a multiple of 2"),
-            };
+    // fn render_ndc_edges_n1to1(&mut self, m: &Matrix) {
+    //     let map_width = mapper(-1., 1., 0., self.width() as f64);
+    //     let map_height = mapper(-1., 1., 0., self.height() as f64);
+    //     let mut iter = m.iter_by_row();
+    //     while let Some(point) = iter.next() {
+    //         let (x0, y0, z0) = (point[0], point[1], point[2]);
+    //         let (x1, y1, z1) = match iter.next() {
+    //             Some(p1) => (p1[0], p1[1], p1[2]),
+    //             None => panic!("Number of edges must be a multiple of 2"),
+    //         };
 
-            // we need to use inverse z to do depth buffer
-            self.draw_line(
-                (map_width(-x0), map_height(y0), 1. / z0),
-                (map_width(-x1), map_height(y1), 1. / z1),
-            );
-        }
-    }
+    //         // we need to use inverse z to do depth buffer
+    //         self.draw_line(
+    //             (map_width(-x0), map_height(y0), 1. / z0),
+    //             (map_width(-x1), map_height(y1), 1. / z1),
+    //         );
+    //     }
+    // }
 
     /// Renders polygon matrix `m` onto screen.
     ///
     /// Removes hidden surface with back-face culling
     /// Also draws scanlines
-    fn render_polygon_matrix(&mut self, m: &Matrix) {
+    fn render_polygon_matrix(&mut self, m: &Matrix, color: RGB, light: LightConfig) {
         // view vector for now: v = <0, 0, 1>, not needed for computation
-
-        // store default img color for ref later on
-        let orig_color = self.get_fg_color();
 
         let mut iter = m.iter_by_row();
         while let Some(point) = iter.next() {
@@ -226,7 +221,7 @@ pub trait Canvas {
             if surface_normal.2 <= 0. {
                 continue;
             }
-            // self.set_fg_color(RGB::new(255, 255, 255));
+            
             // self.draw_line(p0, p1);
             // self.draw_line(p1, p2);
             // self.draw_line(p2, p0);
@@ -307,7 +302,6 @@ pub trait Canvas {
                 }
             }
         }
-        self.set_fg_color(orig_color);
     }
 
     fn draw_scanline(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64)) {
@@ -367,9 +361,9 @@ mod tests {
         m.append_polygon(p0, p1, p2);
 
         img_polygon.render_polygon_matrix(&m);
-        img_ln.draw_line(p0, p1);
-        img_ln.draw_line(p1, p2);
-        img_ln.draw_line(p2, p0);
+        img_ln.draw_line(p0, p1, RGB::WHITE);
+        img_ln.draw_line(p1, p2, RGB::WHITE);
+        img_ln.draw_line(p2, p0, RGB::WHITE);
 
         display_ppm(&img_polygon);
         assert_ne!(

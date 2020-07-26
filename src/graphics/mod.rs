@@ -10,6 +10,7 @@ pub mod processes;
 pub mod utils;
 pub mod vector;
 pub mod img;
+pub mod lights;
 
 
 // re-exports

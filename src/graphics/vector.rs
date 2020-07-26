@@ -1,4 +1,5 @@
 use std::ops;
+use crate::graphics::RGB;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Vec3(pub f64, pub f64, pub f64);
@@ -78,5 +79,11 @@ impl ops::Div<f64> for Vec3 {
     type Output = Vec3;
     fn div(self, rhs: f64) -> Self::Output {
         Vec3(self.0 / rhs, self.1 / rhs, self.2 / rhs)
+    }
+}
+
+impl From<RGB> for Vec3 {
+    fn from(color: RGB) -> Self {
+        Vec3(color.red as f64, color.green as f64, color.blue as f64)
     }
 }
