@@ -3,7 +3,7 @@
 use std::cmp;
 use std::convert;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct RGB {
     pub red: u16,
     pub blue: u16,
@@ -12,13 +12,13 @@ pub struct RGB {
 
 // Constructor and some useful "constants"
 impl RGB {
-    const WHITE: RGB = RGB {
+    pub const WHITE: RGB = RGB {
         red: 255,
         blue: 255,
-        green: 255
+        green: 255,
     };
 
-    const BLACK: RGB = RGB {
+    pub const BLACK: RGB = RGB {
         red: 0,
         blue: 0,
         green: 0,
@@ -93,6 +93,6 @@ fn fmin3(a: f64, b: f64, c: f64, prec: i32) -> f64 {
     fmin2(fmin2(a, b, prec), c, prec)
 }
 
-impl From<Vec3> for RGB {
-    
-}
+// impl From<Vec3> for RGB {
+
+// }

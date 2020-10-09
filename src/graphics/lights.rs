@@ -1,5 +1,5 @@
 use crate::graphics::{vector::Vec3, RGB};
-/// 
+///
 /// view: view vector
 /// ambient: color of ambient light
 /// light: (position from )
@@ -22,11 +22,25 @@ impl LightConfig {
 
         let ndotdir = normaln * dirvecn;
 
-        let iambient = self.ambient_color.into() * self.areflect;
-        let idiffuse = self.dir_color * self.dreflect * (ndotdir);
-        let ispecular = self.dir_color * self.sreflect * ((2 * normaln * (ndotdir) - dirvecn) * viewn).powi(5);
-        
-        // (iambient + idiffuse + ispecular).into();
-        todo!("Convert vec3 into RGB, limit color")
+        let iambient: Vec3 = self.areflect.mul_across(self.ambient_color.into());
+        let idiffuse: Vec3 = Vec3::from(self.dir_color).mul_across(self.dreflect) * ndotdir;
+        let ispecular: Vec3 = Vec3::from(self.dir_color).mul_across(self.sreflect)
+            * (((2 * normaln * ndotdir - dirvecn) * viewn).powi(5));
+
+        // dbg!(iambient, idiffuse, ispecular);
+        // dbg!(iambient.limit(255.), idiffuse.limit(255.), ispecular.limit(255.));
+        dbg!(iambient.limit(255.) + idiffuse.limit(255.) + ispecular.limit(255.)).into()
+    }
+}
+
+pub(crate) fn test_light() -> LightConfig {
+    LightConfig {
+        view: Vec3(0., 0., 1.),
+        ambient_color: RGB::new(50, 50, 50),
+        dir_color: RGB::new(0, 255, 255),
+        dir_vec: Vec3(0.5, 0.75, 1.),
+        areflect: Vec3(0.1, 0.1, 0.1),
+        dreflect: Vec3(0.5, 0.5, 0.5),
+        sreflect: Vec3(0.5, 0.5, 0.5),
     }
 }

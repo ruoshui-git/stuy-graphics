@@ -49,6 +49,8 @@ pub(crate) fn compute_hermite3_coef(p0: f64, p1: f64, r0: f64, r1: f64) -> (f64,
 use crate::graphics::{Matrix, PPMImg};
 use std::{fs, process::Command};
 
+use super::{RGB, lights::LightConfig};
+
 pub(crate) fn display_ppm(img: &PPMImg) {
     let tmpfile_name = "tmp.ppm";
     img.write_binary(tmpfile_name)
@@ -69,23 +71,23 @@ pub(crate) fn display_ppm(img: &PPMImg) {
 }
 
 /// Convenience method to display an edge matrix for testing purposes
-pub(crate) fn display_edge_matrix(m: &Matrix, ndc: bool) {
+pub(crate) fn display_edge_matrix(m: &Matrix, ndc: bool, color: RGB) {
     let mut img = PPMImg::new(500, 500, 225);
     if ndc {
-        img.render_ndc_edges_n1to1(m);
+        img.render_ndc_edges_n1to1(m, color);
     } else {
-        img.render_edge_matrix(m);
+        img.render_edge_matrix(m, color);
     }
     display_ppm(&img);
 }
 
 /// Convenience method  to display polygon matrix for testing purposes
-pub(crate) fn display_polygon_matrix(m: &Matrix, ndc: bool) {
+pub(crate) fn display_polygon_matrix(m: &Matrix, ndc: bool, light: LightConfig) {
     let mut img = PPMImg::new(500, 500, 225);
     if ndc {
         unimplemented!("Displaying polygon matrix in ndc is not implemented.");
     } else {
-        img.render_polygon_matrix(m);
+        img.render_polygon_matrix(m, light);
     }
     display_ppm(&img);
 }

@@ -12,25 +12,23 @@ use crate::graphics::{utils::mapper, matrix::Matrix};
 #[rustfmt::skip]
 pub fn perspective(fov_rad: f64, aspect: f64, near: f64, far: f64) -> Matrix {
 
-    todo!("According to https://en.wikipedia.org/wiki/Graphics_pipeline#Projection, this projection matrix is the transposed version of what I should be using. Fix it.");
-
-    todo!("Impl clipping");
-
+    
     let f = 1. / (fov_rad / 2.).tan();
     let range_inv = 1. / (near - far);
     // Matrix::new(4, 4, vec![
-    //     f / aspect, 0., 0.,                             0.,
-    //     0.,         f,  0.,                             0.,
-    //     0.,         0., (near + far) * range_inv,       -1.,
-    //     0.,         0., near * far * range_inv * 2.,    0.,
-    // ]);
-    Matrix::new(4, 4, vec![
-        f / aspect, 0.,      0.,                             0.,
-        0.,         f,       0.,                             0.,
+        //     f / aspect, 0., 0.,                             0.,
+        //     0.,         f,  0.,                             0.,
+        //     0.,         0., (near + far) * range_inv,       -1.,
+        //     0.,         0., near * far * range_inv * 2.,    0.,
+        // ]);
+        Matrix::new(4, 4, vec![
+            f / aspect, 0.,      0.,                             0.,
+            0.,         f,       0.,                             0.,
         0.,         0.,      (near + far) * range_inv,       near * far * range_inv * 2.,
         0.,         0.,      -1.,                            0.,
-    ])
+    ]);
 
+    todo!("Impl clipping");
 }
 
 /// Construct an orthographic projection matrix
@@ -57,29 +55,25 @@ pub fn orthographic(left: f64, right: f64, bottom: f64, top: f64, near: f64, far
 
 impl Matrix {
 
-    /// Convert matrix in ndc coordinates to device coordinates
-    ///
+    //
     /// This should be used only after perspective divide and before rendered onto the canvas
     pub fn ndc_n1to1_to_device(&mut self, width: f64, height: f64) {
         let map_width = mapper(-1., 1., 0., width);
         let map_height = mapper(-1., 1., 0., height);
-
+        
         for row in self.mut_iter_by_row() {
             row[0] = map_width(-row[0]);
             row[1] = map_height(row[1]);
         }
-
+        
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::{
-        utils::display_edge_matrix,
-        matrix::transform
-    };
-
+    use crate::graphics::{RGB, matrix::transform, utils::display_edge_matrix};
+    
     #[test]
     fn test_perspective() {
         let mut model = Matrix::new_edge_matrix();
@@ -99,6 +93,8 @@ mod tests {
         let mut model = model._mul(&perspective(90., 1., 1., 500.));
         model.perspective_divide();
 
-        display_edge_matrix(&model, true);
+        let fg_color = RGB::WHITE;
+
+        display_edge_matrix(&model, true, fg_color);
     }
 }

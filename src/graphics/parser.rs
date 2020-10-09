@@ -35,7 +35,7 @@ use crate::graphics::{drawer::Drawer, matrix::transform as tr, PPMImg};
 
 pub struct DWScript {
     filename: String,
-    drawer: Drawer,
+    drawer: Drawer<PPMImg>,
     tmpfile_name: String,
 }
 
@@ -62,12 +62,12 @@ impl DWScript {
     pub fn new(filename: &str) -> Self {
         DWScript {
             filename: filename.to_string(),
-            drawer: Drawer::new(Box::new(PPMImg::new(500, 500, 255))),
+            drawer: Drawer::new(PPMImg::new(500, 500, 255)),
             tmpfile_name: String::from("tmp.ppm"),
         }
     }
 
-    pub fn do_parse(&mut self) {
+    pub fn exec(&mut self) {
         let _f = File::open(&self.filename).expect("Error opening file");
         let f = BufReader::new(_f);
         let mut lines = f.lines().enumerate();
@@ -182,6 +182,6 @@ mod tests {
     use super::*;
     #[test]
     fn script() {
-        DWScript::new("script").do_parse();
+        DWScript::new("script").exec();
     }
 }

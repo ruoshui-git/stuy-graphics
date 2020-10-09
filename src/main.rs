@@ -11,7 +11,7 @@ fn main() {
     // child should have a stdin, so we directly unwrap
     let mut magick_in = convert.stdin.take().unwrap();
 
-    let mut drawer = Drawer::new(Box::new(PPMImg::new(500, 500, 255)));
+    let mut drawer = Drawer::new(PPMImg::new(500, 500, 255));
 
     // colors!
     // let default_fg = drawer.get_fg_color();
@@ -59,7 +59,7 @@ fn main() {
                 {
                     drawer.transform_by(&tr::rotatex(rot as f64));
                     drawer.transform_by(&tr::rotatey(rot as f64));
-                    drawer.set_fg_color(magenta);
+                    drawer.fg_color = magenta;
                     drawer.add_sphere((0., 0., 0.), 30.);
                 }
                 drawer.pop_matrix();
@@ -69,7 +69,7 @@ fn main() {
                 {
                     drawer.transform_by(&tr::rotatex(rot as f64 * 3.)); // <- var here
                     drawer.transform_by(&tr::mv(0., 80., 0.));
-                    drawer.set_fg_color(light_yellow);
+                    drawer.fg_color = light_yellow;
                     drawer.add_sphere((0., 0., 0.), 20.);
 
                     // drawer.transform_by(&);
@@ -78,7 +78,7 @@ fn main() {
                             * tr::rotatex(rot as f64 * 4.)
                             * tr::rotatez(-45.)),
                     );
-                    drawer.set_fg_color(brown);
+                    drawer.fg_color = brown;
                     drawer.add_torus((0., 0., 0.), 5., 40.);
                 }
                 drawer.pop_matrix();

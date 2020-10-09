@@ -15,8 +15,8 @@ pub struct PPMImg {
     pub x_wrap: bool,
     pub y_wrap: bool,
     pub invert_y: bool,
-    pub fg_color: RGB,
-    pub bg_color: RGB,
+    // pub fg_color: RGB,
+    // pub bg_color: RGB,
     data: Vec<RGB>,
     zbuf: Vec<f64>,
 }
@@ -46,12 +46,12 @@ impl Debug for PPMImg {
 // impl constructor and exporter
 impl PPMImg {
     /// Createa new PPMImg
-    /// Default fg color is white, bg_color is lack
+    /// Default img is filled with black
     pub fn new(height: u32, width: u32, depth: u16) -> PPMImg {
-        Self::new_with_bg(height, width, depth, RGB::gray(0))
+        Self::with_bg(height, width, depth, RGB::gray(0))
     }
 
-    pub fn new_with_bg(height: u32, width: u32, depth: u16, bg_color: RGB) -> PPMImg {
+    pub fn with_bg(height: u32, width: u32, depth: u16, bg_color: RGB) -> PPMImg {
         PPMImg {
             height,
             width,
@@ -59,8 +59,8 @@ impl PPMImg {
             x_wrap: false,
             y_wrap: false,
             invert_y: false,
-            fg_color: RGB::gray(depth),
-            bg_color,
+            // fg_color: RGB::gray(depth),
+            // bg_color,
             data: vec![bg_color; (width * height).try_into().unwrap()],
             zbuf: vec![f64::NEG_INFINITY; (width * height).try_into().unwrap()],
         }
@@ -154,27 +154,15 @@ impl Canvas for PPMImg {
     /// Plot a point on this PPMImg at (`x`, `y`, `z`)
     ///
     /// `z` is used for depth-buffer. Will only plot if `z` is closer to screen (new_z > existing_z).
-    fn plot(&mut self, x: i32, y: i32, z: f64) -> () {
+    fn plot(&mut self, x: i32, y: i32, z: f64, color: RGB) -> () {
         // make the origin to be lower left corner
         let y = self.height as i32 - 1 - y;
         if let Some(index) = self.index(x, y) {
             if self.zbuf[index] < z {
-                self.data[index] = self.fg_color;
+                self.data[index] = color;
                 self.zbuf[index] = z;
             }
         }
-    }
-    fn set_fg_color(&mut self, color: RGB) {
-        self.fg_color = color;
-    }
-    fn set_bg_color(&mut self, color: RGB) {
-        self.bg_color = color;
-    }
-    fn get_fg_color(&self) -> RGB {
-        self.fg_color
-    }
-    fn get_bg_color(&self) -> RGB {
-        self.bg_color
     }
     fn width(&self) -> u32 {
         self.width
@@ -207,10 +195,11 @@ impl Canvas for PPMImg {
         utils::display_ppm(&self);
     }
 
-    fn clear(&mut self) {
-        let bg = self.bg_color;
+    /// Fill image with a certain color
+    fn clear(&mut self, color: RGB) {
+        // let bg = self.bg_color;
         for d in self.data.iter_mut() {
-            *d = bg;
+            *d = color;
         }
 
         self.zbuf = vec![f64::NEG_INFINITY; (self.height * self.width).try_into().unwrap()];

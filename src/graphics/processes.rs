@@ -18,4 +18,3 @@ pub fn pipe_to_magick(args: Vec<&str>) -> Child {
         .spawn()
         .expect("Can't spawn imagemagick")
 }
-

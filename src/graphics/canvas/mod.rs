@@ -1,5 +1,6 @@
-extern crate rand;
-use rand::Rng;
+// extern crate rand;
+// use rand::Rng;
+use super::lights::LightConfig;
 use crate::graphics::{
     matrix::Matrix,
     utils::{mapper, polar_to_xy},
@@ -7,7 +8,6 @@ use crate::graphics::{
     RGB,
 };
 use std::io;
-use super::lights::LightConfig;
 
 // turtle will cause problems
 // mod turtle;
@@ -26,7 +26,7 @@ pub trait Canvas {
     fn display(&self);
 
     /// Clear the canvas of all drawings and resets configurations like z-buffer
-    fn clear(&mut self);
+    fn clear(&mut self, color: RGB);
 
     //----------------------------------------- default methods for drawing lines
 
@@ -173,30 +173,31 @@ pub trait Canvas {
         }
     }
 
-    // fn render_ndc_edges_n1to1(&mut self, m: &Matrix) {
-    //     let map_width = mapper(-1., 1., 0., self.width() as f64);
-    //     let map_height = mapper(-1., 1., 0., self.height() as f64);
-    //     let mut iter = m.iter_by_row();
-    //     while let Some(point) = iter.next() {
-    //         let (x0, y0, z0) = (point[0], point[1], point[2]);
-    //         let (x1, y1, z1) = match iter.next() {
-    //             Some(p1) => (p1[0], p1[1], p1[2]),
-    //             None => panic!("Number of edges must be a multiple of 2"),
-    //         };
+    fn render_ndc_edges_n1to1(&mut self, m: &Matrix, color: RGB) {
+        let map_width = mapper(-1., 1., 0., self.width() as f64);
+        let map_height = mapper(-1., 1., 0., self.height() as f64);
+        let mut iter = m.iter_by_row();
+        while let Some(point) = iter.next() {
+            let (x0, y0, z0) = (point[0], point[1], point[2]);
+            let (x1, y1, z1) = match iter.next() {
+                Some(p1) => (p1[0], p1[1], p1[2]),
+                None => panic!("Number of edges must be a multiple of 2"),
+            };
 
-    //         // we need to use inverse z to do depth buffer
-    //         self.draw_line(
-    //             (map_width(-x0), map_height(y0), 1. / z0),
-    //             (map_width(-x1), map_height(y1), 1. / z1),
-    //         );
-    //     }
-    // }
+            // we need to use inverse z to do depth buffer
+            self.draw_line(
+                (map_width(-x0), map_height(y0), 1. / z0),
+                (map_width(-x1), map_height(y1), 1. / z1),
+                color,
+            );
+        }
+    }
 
     /// Renders polygon matrix `m` onto screen.
     ///
     /// Removes hidden surface with back-face culling
     /// Also draws scanlines
-    fn render_polygon_matrix(&mut self, m: &Matrix, color: RGB, light: LightConfig) {
+    fn render_polygon_matrix(&mut self, m: &Matrix, light: LightConfig) {
         // view vector for now: v = <0, 0, 1>, not needed for computation
 
         let mut iter = m.iter_by_row();
@@ -221,19 +222,22 @@ pub trait Canvas {
             if surface_normal.2 <= 0. {
                 continue;
             }
-            
+
             // self.draw_line(p0, p1);
             // self.draw_line(p1, p2);
             // self.draw_line(p2, p0);
 
             // draw scanlines
             {
-                let mut rng = rand::thread_rng();
-                self.set_fg_color(RGB::new(
-                    rng.gen_range(0, 255),
-                    rng.gen_range(0, 255),
-                    rng.gen_range(0, 255),
-                ));
+                // let mut rng = rand::thread_rng();
+                // self.set_fg_color(RGB::new(
+                //     rng.gen_range(0, 255),
+                //     rng.gen_range(0, 255),
+                //     rng.gen_range(0, 255),
+                // ));
+
+                let color = light.get_color_from_norm(surface_normal);
+                // let color = RGB::WHITE;
 
                 // sort points by y value
                 let mut points = [v0, v1, v2];
@@ -255,7 +259,7 @@ pub trait Canvas {
                     let mut z1 = vm.z() + yoffsetm * d1.z();
 
                     for y in (vb.y().ceil() as i64)..(vt.y().ceil() as i64) {
-                        self.draw_scanline((x0, y as f64, z0), (x1, y as f64, z1));
+                        self.draw_scanline((x0, y as f64, z0), (x1, y as f64, z1), color);
 
                         x0 += d0.x();
                         z0 += d0.z();
@@ -282,8 +286,11 @@ pub trait Canvas {
                     let mut z1 = vb.z() + yoffsetb * dbottom.z();
                     let mut z2 = vm.z() + yoffsetm * dtop.z();
 
+                    // flat shading
+                    // let color = light.get_color_from_norm(surface_normal);
+
                     for y in (vb.y().ceil() as i64)..(vm.y().ceil() as i64) {
-                        self.draw_scanline((x0, y as f64, z0), (x1, y as f64, z1));
+                        self.draw_scanline((x0, y as f64, z0), (x1, y as f64, z1), color);
 
                         x0 += dv.x();
                         x1 += dbottom.x();
@@ -292,7 +299,7 @@ pub trait Canvas {
                         z1 += dbottom.z();
                     }
                     for y in (vm.y().ceil() as i64)..(vt.y().ceil() as i64) {
-                        self.draw_scanline((x0, y as f64, z0), (x2, y as f64, z2));
+                        self.draw_scanline((x0, y as f64, z0), (x2, y as f64, z2), color);
 
                         x0 += dv.x();
                         x2 += dtop.x();
@@ -304,19 +311,13 @@ pub trait Canvas {
         }
     }
 
-    fn draw_scanline(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64)) {
+    fn draw_scanline(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64), color: RGB) {
         assert_eq!(p0.1, p1.1, "Scanline should be horizontal");
 
         // swap variables if needed, since we are always going from left to right
         let (p0, p1) = if p0.0 > p1.0 { (p1, p0) } else { (p0, p1) };
 
-        let (x0, y0, z0, x1, z1) = (
-            p0.0,
-            p0.1,
-            p0.2,
-            p1.0,
-            p1.2,
-        );
+        let (x0, y0, z0, x1, z1) = (p0.0, p0.1, p0.2, p1.0, p1.2);
 
         let y0 = y0.ceil() as i64;
         let xoffset = x0.ceil() - x0;
@@ -324,23 +325,17 @@ pub trait Canvas {
         // println!("x1 - x0: {} - {}", x1, x0);
 
         let z_inc = (z1 - z0) / (x1 - x0) as f64;
-        
+
         let mut z = z0 + xoffset * z_inc;
 
         for x in (x0.ceil() as i64)..(x1.ceil() as i64) {
-            self.plot(x as i32, y0 as i32, z);
+            self.plot(x as i32, y0 as i32, z, color);
             z += z_inc;
         }
     }
-    // fn render_polygon_with_stack(&mut self, stack: &impl MStack<Matrix>, m: &Matrix) {
-    //     self.render_polygon_matrix(&(m * stack.get_top()));
-    // }
-
-    // fn render_edges_with_stack(&mut self, stack: &impl MStack<Matrix>, m: &Matrix) {
-    //     self.render_edge_matrix(&(m * stack.get_top()));
-    // }
 }
 
+/*
 #[cfg(test)]
 mod tests {
     use super::super::PPMImg;
@@ -408,4 +403,6 @@ mod tests {
         img.render_polygon_matrix(&m);
         img.save("temp.png").expect("Error writing to file");
     }
+
 }
+*/

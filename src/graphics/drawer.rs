@@ -1,21 +1,72 @@
 use crate::graphics::{Canvas, Matrix, RGB};
 use std::io;
 
+use super::{lights::{self, LightConfig}};
+
 /// A procedural interface to simplfy drawing
-pub struct Drawer {
+pub struct Drawer<T: Canvas> {
     stack: Vec<Matrix>,
-    canvas: Box<dyn Canvas>,
+    canvas: T,
+    pub fg_color: RGB,
+    pub bg_color: RGB,
+    pub light: LightConfig,
+}
+
+pub struct DrawerBuilder<T: Canvas> {
+    canvas: T,
+    fg_color: RGB,
+    bg_color: RGB,
+    light: LightConfig,
+}
+
+impl<T: Canvas> DrawerBuilder<T> {
+
+    /// Fill a drawer
+    pub fn new(canvas: T) -> Self {
+        Self {
+            canvas,
+            fg_color: RGB::WHITE,
+            bg_color: RGB::BLACK,
+            light: lights::test_light(),
+        }
+    }
+
+    pub fn with_fg_color(mut self, color: RGB) -> Self {
+        self.fg_color = color;
+        self
+    }
+
+    pub fn with_bg_color(mut self, color: RGB) -> Self {
+        self.bg_color = color;
+        self
+    }
+
+    pub fn with_light(mut self, light: LightConfig) -> Self {
+        self.light = light;
+        self
+    }
+
+    pub fn build(self) -> Drawer<T> {
+        Drawer {
+            stack: new_stack(),
+            canvas: self.canvas,
+            fg_color: self.fg_color,
+            bg_color: self.bg_color,
+            light: self.light,
+        }
+    }
 }
 
 // helpers
-impl Drawer {
+impl<T: Canvas> Drawer<T> {
     pub fn render_edges_with_stack(&mut self, m: &Matrix) {
-        self.canvas.render_edge_matrix(&(m * self.get_top_matrix()))
+        self.canvas
+            .render_edge_matrix(&(m * self.get_top_matrix()), self.fg_color)
     }
 
     pub fn render_polygons_with_stack(&mut self, m: &Matrix) {
         self.canvas
-            .render_polygon_matrix(&(m * self.get_top_matrix()))
+            .render_polygon_matrix(&(m * self.get_top_matrix()), self.light)
     }
 
     fn get_top_matrix(&self) -> &Matrix {
@@ -24,44 +75,24 @@ impl Drawer {
             .expect("Error trying to get the last stack")
     }
 
-    fn new_stack() -> Vec<Matrix> {
-        vec![Matrix::ident(4)]
-    }
 }
 
-// colors
-impl Drawer {
-    pub fn set_fg_color(&mut self, color: RGB) {
-        self.canvas.set_fg_color(color);
-    }
-    pub fn set_bg_color(&mut self, color: RGB) {
-        self.canvas.set_bg_color(color);
-    }
-    pub fn get_fg_color(&self) -> RGB {
-        self.canvas.get_fg_color()
-    }
-    pub fn get_bg_color(&self) -> RGB {
-        self.canvas.get_bg_color()
-    }
-}
+impl<T: Canvas> Drawer<T> {
 
-impl Drawer {
-    pub fn new(canvas: Box<dyn Canvas>) -> Self {
-        Drawer {
-            stack: Drawer::new_stack(),
-            canvas,
-        }
+    /// Create a new drawer with fg_color white and bg_color black
+    pub fn new(canvas: T) -> Self {
+        DrawerBuilder::new(canvas).build()
     }
 
     pub fn clear(&mut self) {
-        self.canvas.clear();
+        self.canvas.clear(self.bg_color);
 
         // this will cause unexpected behaviors
         // self.stack = Self::new_stack();
     }
 
     pub fn reset_stack(&mut self) {
-        self.stack = Self::new_stack();
+        self.stack = new_stack();
     }
 
     pub fn save(&self, filepath: &str) -> io::Result<()> {
@@ -71,14 +102,14 @@ impl Drawer {
     pub fn display(&self) {
         self.canvas.display();
     }
-    
+
     pub fn write_to_buf(&self, writer: &mut dyn io::Write) -> io::Result<()> {
         self.canvas.write_to_buf(writer)
     }
 }
 
 // one dimensional stuff
-impl Drawer {
+impl<T: Canvas> Drawer<T> {
     pub fn draw_line(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64)) {
         let mut edges = Matrix::new_edge_matrix();
         edges.append_edge(&[p0.0, p0.1, p0.2, p1.0, p1.1, p1.2]);
@@ -103,7 +134,7 @@ impl Drawer {
 }
 
 // transformations
-impl Drawer {
+impl<T: Canvas> Drawer<T> {
     pub fn transform_by(&mut self, trans: &Matrix) {
         *self
             .stack
@@ -113,31 +144,51 @@ impl Drawer {
 }
 
 // 2d shapes
-impl Drawer {
+impl<T: Canvas> Drawer<T> {
     pub fn add_box(&mut self, (x, y, z): (f64, f64, f64), dx: f64, dy: f64, dz: f64) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_box((x, y, z), dx, dy, dz);
-        self.render_polygons_with_stack(&m);
+        // self.render_polygons_with_stack(&m);
     }
     pub fn add_sphere(&mut self, center: (f64, f64, f64), radius: f64) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_sphere(center, radius);
-        self.render_polygons_with_stack(&m);
+        // self.render_polygons_with_stack(&m);
     }
     pub fn add_torus(&mut self, center: (f64, f64, f64), radius1: f64, radius2: f64) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_torus(center, radius1, radius2);
-        self.render_polygons_with_stack(&m);
+        // self.render_polygons_with_stack(&m);
     }
 }
 
 // coordinate stack related
-impl Drawer {
+impl<T: Canvas> Drawer<T> {
     pub fn push_matrix(&mut self) {
         self.stack.push(self.get_top_matrix().clone());
     }
 
     pub fn pop_matrix(&mut self) {
         self.stack.pop();
+    }
+}
+
+/// Make a new matrix stack
+fn new_stack() -> Vec<Matrix> {
+    vec![Matrix::ident(4)]
+}
+
+#[cfg(test)]
+mod tests {
+        use crate::graphics::PPMImg;
+
+use super::*;
+use crate::graphics::utils;
+    #[test]
+    fn test_line() {
+        let mut img = PPMImg::new(500, 500, 255);
+        img.draw_line((0.,0.,0.), (100., 100., 100.,), RGB::WHITE);
+        
+        utils::display_ppm(&img);
     }
 }
