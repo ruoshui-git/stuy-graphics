@@ -83,7 +83,7 @@ pub(crate) fn display_edge_matrix(m: &Matrix, ndc: bool, color: RGB) {
 
 /// Convenience method  to display polygon matrix for testing purposes
 pub(crate) fn display_polygon_matrix(m: &Matrix, ndc: bool, light: LightConfig) {
-    let mut img = PPMImg::new(500, 500, 225);
+    let mut img = PPMImg::with_bg(500, 500, 225, RGB::WHITE);
     if ndc {
         unimplemented!("Displaying polygon matrix in ndc is not implemented.");
     } else {
