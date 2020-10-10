@@ -1,7 +1,7 @@
 use crate::graphics::{Canvas, Matrix, RGB};
 use std::io;
 
-use super::{lights::{self, LightConfig}};
+use super::lights::LightConfig;
 
 /// A procedural interface to simplfy drawing
 pub struct Drawer<T: Canvas> {
@@ -27,7 +27,7 @@ impl<T: Canvas> DrawerBuilder<T> {
             canvas,
             fg_color: RGB::WHITE,
             bg_color: RGB::BLACK,
-            light: lights::test_light(),
+            light: LightConfig::TEST_LIGHT,
         }
     }
 

@@ -6,22 +6,22 @@ use std::convert;
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct RGB {
     pub red: u16,
-    pub blue: u16,
     pub green: u16,
+    pub blue: u16,
 }
 
 // Constructor and some useful "constants"
 impl RGB {
     pub const WHITE: RGB = RGB {
         red: 255,
-        blue: 255,
         green: 255,
+        blue: 255,
     };
 
     pub const BLACK: RGB = RGB {
         red: 0,
-        blue: 0,
         green: 0,
+        blue: 0,
     };
 
     pub fn gray(depth: u16) -> Self {

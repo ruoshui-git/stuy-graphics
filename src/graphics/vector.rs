@@ -132,10 +132,9 @@ impl From<RGB> for Vec3 {
 impl Into<RGB> for Vec3 {
     fn into(self) -> RGB {
         RGB {
-            red: self.0.min(255.) as u16,
-            green: self.1.min(255.) as u16,
-            blue: self.2.min(255.) as u16,
-            
+            red: self.0.max(0.).min(255.) as u16,
+            blue: self.2.max(0.).min(255.) as u16,
+            green: self.1.max(0.).min(255.) as u16,
         }
     }
 }

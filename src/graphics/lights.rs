@@ -31,17 +31,34 @@ impl LightConfig {
         // dbg!(iambient.limit(255.), idiffuse.limit(255.), ispecular.limit(255.));
         (iambient.limit(0., 255.) + idiffuse.limit(0., 255.) + ispecular.limit(0., 255.)).into()
     }
-}
 
-pub(crate) fn test_light() -> LightConfig {
-    LightConfig {
+    pub const TEST_LIGHT: Self = Self {
         view: Vec3(0., 0., 1.),
-        ambient_color: RGB::new(50, 50, 50),
-        // ambient_color: RGB::new(50, 50, 50),
-        dir_color: RGB::new(0, 255, 255),
-        dir_vec: Vec3(-0.5, 0.75, 1.),
+        ambient_color: RGB {
+            red: 50,
+            green: 50,
+            blue: 50,
+        },
+        dir_color: RGB {
+            red: 0,
+            green: 255,
+            blue: 255,
+        },
+        dir_vec: Vec3(0.5, 0.75, -1.),
         areflect: Vec3(0.1, 0.1, 0.1),
         dreflect: Vec3(0.5, 0.5, 0.5),
         sreflect: Vec3(0.5, 0.5, 0.5),
-    }
+    };
 }
+
+// pub(crate) fn test_light() -> LightConfig {
+//     LightConfig {
+//         view: Vec3(0., 0., 1.),
+//         ambient_color: RGB::new(50, 50, 50),
+//         dir_color: RGB::new(0, 255, 255),
+//         dir_vec: Vec3(0.5, 0.75, -1.),
+//         areflect: Vec3(0.1, 0.1, 0.1),
+//         dreflect: Vec3(0.5, 0.5, 0.5),
+//         sreflect: Vec3(0.5, 0.5, 0.5),
+//     }
+// }

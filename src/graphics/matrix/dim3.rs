@@ -197,15 +197,15 @@ impl Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::{lights, matrix::transform, utils::display_polygon_matrix};
+    use crate::graphics::{lights::LightConfig, matrix::transform, utils::display_polygon_matrix};
 
     #[test]
     fn draw_sphere() {
         let mut m = Matrix::new_polygon_matrix();
-        m.add_sphere((250., 250., 0.), 400.);
+        m.add_sphere((250., 250., 0.), 40.);
         m *= transform::rotatex(40.) * transform::rotatey(90.);
         println!("len of array: {}", m.data.len());
-        display_polygon_matrix(&m, false, lights::test_light());
+        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod tests {
         let mut m = Matrix::new_edge_matrix();
         m.add_torus((250., 250., 0.), 30., 100.);
         m *= transform::rotatex(40.);
-        display_polygon_matrix(&m, false, lights::test_light());
+        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
     }
     #[test]
     fn draw_cube() {
@@ -243,6 +243,6 @@ mod tests {
             * transform::rotatex(40.)
             * transform::rotatey(20.);
 
-        display_polygon_matrix(&m, false, lights::test_light());
+        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
     }
 }
