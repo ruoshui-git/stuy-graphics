@@ -6,7 +6,7 @@ pub struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
     // pub fn _dot(a: &Self, b: &Self) -> f64 {
-    //     a.0 * b.0 + a.1 * b.1 + a.2 + b.2
+    //     a.0 * b.0 + a.1 * b.1 + a.2 * b.2
     // }
 
     // pub fn _cross(a: &Self, b: &Self) -> Self {
@@ -30,7 +30,7 @@ impl Vec3 {
 
 impl Vec3 {
     pub fn dot(&self, other: Self) -> f64 {
-        self.0 * other.0 + self.1 * other.1 + self.2 + other.2
+        self.0 * other.0 + self.1 * other.1 + self.2 * other.2
     }
 
     /// Multiply two Vec3 field by field; .mul() is already used for dot product
@@ -58,11 +58,11 @@ impl Vec3 {
         (self.0 * self.0 + self.1 * self.1 + self.2 * self.2).sqrt()
     }
 
-    pub fn limit(&self, max: f64) -> Self {
+    pub fn limit(&self, min: f64, max: f64) -> Self {
         Self(
-            self.0.min(max),
-            self.1.min(max),
-            self.2.min(max),
+            self.0.max(min).min(max),
+            self.1.max(min).min(max),
+            self.2.max(min).min(max),
         )
     }
 }
@@ -140,12 +140,12 @@ impl Into<RGB> for Vec3 {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    #[test]
-    fn test_limit() {
-        // this should be correct
-    }
-}
+//     #[test]
+//     fn test_limit() {
+//         // this should be correct
+//     }
+// }
