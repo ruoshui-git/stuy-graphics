@@ -72,7 +72,7 @@ impl PPMImg {
         writeln!(buf, "{} {} {}", self.width, self.height, self.depth)?;
         if self.depth < 256 {
             for t in self.data.iter() {
-                buf.write(&[t.green as u8])?;
+                buf.write(&[t.red as u8])?;
                 buf.write(&[t.green as u8])?;
                 buf.write(&[t.blue as u8])?;
             }
