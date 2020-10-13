@@ -218,8 +218,10 @@ pub trait Canvas {
             let v2 = Vec3::from_pt(p2);
 
             let surface_normal = (v1 - v0).cross(v2 - v0);
+            // let surface_normal = (v2 - v0).cross(v1 - v0);
+            let viewvecn = light.view.norm();
 
-            if surface_normal.2 <= 0. {
+            if surface_normal * viewvecn <= 0. {
                 continue;
             }
 
@@ -238,6 +240,9 @@ pub trait Canvas {
 
                 let color = light.get_color_from_norm(surface_normal);
                 // let color = RGB::WHITE;
+                // dbg!(v0, v1, v2);
+                eprintln!("Polygon(({},{},{}),({},{},{}),({},{},{}))", v0.0, v0.1, v0.2, v1.0, v1.1, v1.2, v2.0, v2.1, v2.2);
+                eprintln!("color: {:?}", color);
 
                 // sort points by y value
                 let mut points = [v0, v1, v2];
