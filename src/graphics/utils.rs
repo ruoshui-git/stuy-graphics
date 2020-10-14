@@ -49,7 +49,7 @@ pub(crate) fn compute_hermite3_coef(p0: f64, p1: f64, r0: f64, r1: f64) -> (f64,
 use crate::graphics::{Matrix, PPMImg};
 use std::{fs, process::Command};
 
-use super::{RGB, lights::LightConfig};
+use super::{lights::LightConfig, RGB};
 
 pub(crate) fn display_ppm(img: &PPMImg) {
     let tmpfile_name = "tmp.ppm";

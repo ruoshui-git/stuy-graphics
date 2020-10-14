@@ -251,8 +251,7 @@ mod tests {
             * transform::rotatex(30.)
             // * transform::rotatey(30.)
             // * transform::rotatez(30.)
-            * transform::mv(250., 50., 0.)
-            ;
+            * transform::mv(250., 50., 0.);
         display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
     }
 

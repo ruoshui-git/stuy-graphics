@@ -1,4 +1,4 @@
-use crate::graphics::{utils::mapper, matrix::Matrix};
+use crate::graphics::{matrix::Matrix, utils::mapper};
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection#Perspective_matrix
 
@@ -50,30 +50,25 @@ pub fn orthographic(left: f64, right: f64, bottom: f64, top: f64, near: f64, far
     ])
 }
 
-
-
-
 impl Matrix {
-
     //
     /// This should be used only after perspective divide and before rendered onto the canvas
     pub fn ndc_n1to1_to_device(&mut self, width: f64, height: f64) {
         let map_width = mapper(-1., 1., 0., width);
         let map_height = mapper(-1., 1., 0., height);
-        
+
         for row in self.mut_iter_by_row() {
             row[0] = map_width(-row[0]);
             row[1] = map_height(row[1]);
         }
-        
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::{RGB, matrix::transform, utils::display_edge_matrix};
-    
+    use crate::graphics::{matrix::transform, utils::display_edge_matrix, RGB};
+
     #[test]
     fn test_perspective() {
         let mut model = Matrix::new_edge_matrix();
@@ -82,11 +77,9 @@ mod tests {
         model.add_box((-80., -120., 0.), 75., 75., 75.);
         model.add_torus((-30., -335., 0.), 25., 175.);
         let t = Matrix::ident(4)
-        // .mul(&transform::rotatex(30.))
-        // .mul(&transform::rotatey(-20.))
-        ._mul(&transform::mv(0., 250., 250.)
-        
-    );
+            // .mul(&transform::rotatex(30.))
+            // .mul(&transform::rotatey(-20.))
+            ._mul(&transform::mv(0., 250., 250.));
         let model = model._mul(&t);
 
         // now apply perspective

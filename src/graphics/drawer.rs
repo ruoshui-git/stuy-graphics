@@ -20,7 +20,6 @@ pub struct DrawerBuilder<T: Canvas> {
 }
 
 impl<T: Canvas> DrawerBuilder<T> {
-
     /// Fill a drawer
     pub fn new(canvas: T) -> Self {
         Self {
@@ -74,11 +73,9 @@ impl<T: Canvas> Drawer<T> {
             .last()
             .expect("Error trying to get the last stack")
     }
-
 }
 
 impl<T: Canvas> Drawer<T> {
-
     /// Create a new drawer with fg_color white and bg_color black
     pub fn new(canvas: T) -> Self {
         DrawerBuilder::new(canvas).build()
@@ -180,15 +177,15 @@ fn new_stack() -> Vec<Matrix> {
 
 #[cfg(test)]
 mod tests {
-        use crate::graphics::PPMImg;
+    use crate::graphics::PPMImg;
 
-use super::*;
-use crate::graphics::utils;
+    use super::*;
+    use crate::graphics::utils;
     #[test]
     fn test_line() {
         let mut img = PPMImg::new(500, 500, 255);
-        img.draw_line((0.,0.,0.), (100., 100., 100.,), RGB::WHITE);
-        
+        img.draw_line((0., 0., 0.), (100., 100., 100.), RGB::WHITE);
+
         utils::display_ppm(&img);
     }
 }

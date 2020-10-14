@@ -1,8 +1,6 @@
-
 use super::Matrix;
 
 impl Matrix {
-    
     /// Make a new edge matrix for drawing on 2d surfaces
     pub fn new_edge_matrix() -> Matrix {
         Matrix {
@@ -21,6 +19,4 @@ impl Matrix {
         self.data.push(1.0);
         self.nrows += 2;
     }
-
-    
 }
