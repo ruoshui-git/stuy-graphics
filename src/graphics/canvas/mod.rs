@@ -240,9 +240,6 @@ pub trait Canvas {
 
                 let color = light.get_color_from_norm(surface_normal);
                 // let color = RGB::WHITE;
-                // dbg!(v0, v1, v2);
-                eprintln!("Polygon(({},{},{}),({},{},{}),({},{},{}))", v0.0, v0.1, v0.2, v1.0, v1.1, v1.2, v2.0, v2.1, v2.2);
-                eprintln!("color: {:?}", color);
 
                 // sort points by y value
                 let mut points = [v0, v1, v2];
