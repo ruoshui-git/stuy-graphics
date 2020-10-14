@@ -148,17 +148,17 @@ impl<T: Canvas> Drawer<T> {
     pub fn add_box(&mut self, (x, y, z): (f64, f64, f64), dx: f64, dy: f64, dz: f64) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_box((x, y, z), dx, dy, dz);
-        // self.render_polygons_with_stack(&m);
+        self.render_polygons_with_stack(&m);
     }
     pub fn add_sphere(&mut self, center: (f64, f64, f64), radius: f64) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_sphere(center, radius);
-        // self.render_polygons_with_stack(&m);
+        self.render_polygons_with_stack(&m);
     }
     pub fn add_torus(&mut self, center: (f64, f64, f64), radius1: f64, radius2: f64) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_torus(center, radius1, radius2);
-        // self.render_polygons_with_stack(&m);
+        self.render_polygons_with_stack(&m);
     }
 }
 

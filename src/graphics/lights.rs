@@ -43,7 +43,7 @@ impl LightConfig {
         },
         dir_color: RGB {
             red: 0,
-            green: 0,
+            green: 255,
             blue: 255,
         },
         dir_vec: Vec3(0.5, 0.75, 1.),
