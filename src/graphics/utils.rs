@@ -99,9 +99,3 @@ pub fn mapper(instart: f64, inend: f64, outstart: f64, outend: f64) -> impl Fn(f
     // move values into closure so they are captured by value, not ref
     move |x| outstart + slope * (x - instart)
 }
-
-/// Represents a dimention
-pub enum Dim {
-    D2,
-    D3,
-}
