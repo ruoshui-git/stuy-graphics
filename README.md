@@ -13,7 +13,7 @@
  - Fix several very annoying issues:
     - DOT PRODUCT (likely typo in refactoring)
     - RED channel in img controlled by green (likely typo in refactoring too)
-    - *IMPORTANT* When generating torus, make sure the inner loop goes through all points: `0..=stesp` instead of `0..steps`
+    - *IMPORTANT* When generating torus, make sure the inner loop goes through all points: `0..=steps` instead of `0..steps`
 
  - And more (can't remember now)
 
