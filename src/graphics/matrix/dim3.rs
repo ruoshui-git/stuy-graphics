@@ -162,10 +162,11 @@ impl Matrix {
         // y = rsin(t) + Cy
         // z = -sin(p) * (rcos(t) + R) + Cz
         let (cx, cy, cz) = center;
-        let steps = 21;
+        // let steps = 21;
+        let steps = 30;
         for torus_angle_norm in 0..steps {
             let torus_angle = torus_angle_norm as f64 * 2. * PI / steps as f64;
-            for circ_angle_norm in 0..steps {
+            for circ_angle_norm in 0..=steps {
                 let circ_angle = circ_angle_norm as f64 * 2. * PI / steps as f64;
                 let x = circ_angle.cos() * (radius1 * torus_angle.cos() + radius2) + cx;
                 let y = radius1 * torus_angle.sin() + cy;
@@ -233,10 +234,32 @@ mod tests {
         m *= transform::rotatex(40.);
         display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
     }
+
+    // rotate
+    // z 30
+    // rotate
+    // y 30
+    // rotate
+    // x 45
+    // torus
+    // 0 0 0 75 150
+    #[test]
+    fn torus2() {
+        let mut m = Matrix::new_edge_matrix();
+        m.add_torus((0., 0., 0.), 75., 150.);
+        m *= Matrix::ident(4)
+            * transform::rotatex(30.)
+            // * transform::rotatey(30.)
+            // * transform::rotatez(30.)
+            * transform::mv(250., 50., 0.)
+            ;
+        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
+    }
+
     #[test]
     fn draw_cube() {
         let mut m = Matrix::new_polygon_matrix();
-        m.add_box((220., 100., 100.), 100., -100., 100.);
+        m.add_box((220., 200., 100.), 100., 100., 100.);
         // println!("{}", m);
         m *= Matrix::ident(4)
             * transform::mv(120., 20., 40.)
