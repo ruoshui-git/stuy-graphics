@@ -37,14 +37,14 @@ impl LightConfig {
     pub const TEST_LIGHT: Self = Self {
         view: Vec3(0., 0., 1.),
         ambient_color: RGB {
-            red: 50,
-            green: 50,
-            blue: 50,
+            red: 0,
+            green: 0,
+            blue: 0,
         },
         dir_color: RGB {
-            red: 0,
-            green: 255,
-            blue: 255,
+            red: 252,
+            green: 219,
+            blue: 3,
         },
         dir_vec: Vec3(0.5, 0.75, 1.),
         areflect: Vec3(0.1, 0.1, 0.1),
