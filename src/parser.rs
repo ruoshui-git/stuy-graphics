@@ -31,7 +31,7 @@ use std::{
     io::{self, prelude::*, BufReader},
 };
 
-use crate::graphics::{drawer::Drawer, matrix::transform as tr, PPMImg};
+use crate::{drawer::Drawer, matrix::transform as tr, PPMImg};
 
 pub struct DWScript {
     filename: String,

@@ -1,7 +1,7 @@
 // extern crate rand;
 // use rand::Rng;
 use super::lights::LightConfig;
-use crate::graphics::{
+use crate::{
     matrix::Matrix,
     utils::{mapper, polar_to_xy},
     vector::Vec3,

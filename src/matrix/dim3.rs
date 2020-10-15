@@ -198,7 +198,7 @@ impl Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::{lights::LightConfig, matrix::transform, utils::display_polygon_matrix};
+    use crate::{lights::LightConfig, matrix::transform, utils::display_polygon_matrix};
 
     #[test]
     fn draw_sphere() {

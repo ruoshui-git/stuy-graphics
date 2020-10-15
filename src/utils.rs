@@ -2,7 +2,7 @@ use std::fs::File;
 
 use std::path::Path;
 
-use crate::graphics::canvas::Canvas;
+use crate::canvas::Canvas;
 
 pub(crate) fn create_file(filepath: &str) -> File {
     let path = Path::new(filepath);
@@ -46,7 +46,7 @@ pub(crate) fn compute_hermite3_coef(p0: f64, p1: f64, r0: f64, r1: f64) -> (f64,
     )
 }
 
-use crate::graphics::{Matrix, PPMImg};
+use crate::{Matrix, PPMImg};
 use std::{fs, process::Command};
 
 use super::{lights::LightConfig, RGB};

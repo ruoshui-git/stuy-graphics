@@ -1,5 +1,5 @@
 [package]
-name = "w9_lighting"
+name = "graphics"
 version = "0.1.0"
 authors = ["ruoshui <rmao10@stuy.edu>"]
 edition = "2018"

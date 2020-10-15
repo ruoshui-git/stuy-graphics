@@ -1,4 +1,4 @@
-use crate::graphics::{vector::Vec3, RGB};
+use crate::{vector::Vec3, RGB};
 /// Represents lighting configuration
 #[derive(Copy, Clone, Debug)]
 pub struct LightConfig {

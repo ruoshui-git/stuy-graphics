@@ -5,7 +5,7 @@ use std::{
     io::{self, prelude::Write},
 };
 // internal use
-use crate::graphics::{processes::pipe_to_magick, utils, Canvas, RGB};
+use crate::{processes::pipe_to_magick, utils, Canvas, RGB};
 use io::BufWriter;
 
 pub struct PPMImg {

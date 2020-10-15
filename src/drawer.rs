@@ -1,4 +1,4 @@
-use crate::graphics::{Canvas, Matrix, RGB};
+use crate::{Canvas, matrix::Matrix, RGB};
 use std::io;
 
 use super::lights::LightConfig;
@@ -177,10 +177,10 @@ fn new_stack() -> Vec<Matrix> {
 
 #[cfg(test)]
 mod tests {
-    use crate::graphics::PPMImg;
+    use crate::PPMImg;
 
     use super::*;
-    use crate::graphics::utils;
+    use crate::utils;
     #[test]
     fn test_line() {
         let mut img = PPMImg::new(500, 500, 255);

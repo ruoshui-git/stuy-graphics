@@ -1,4 +1,4 @@
-use crate::graphics::RGB;
+use crate::RGB;
 use std::ops;
 
 #[derive(Copy, Clone, PartialEq, Debug)]

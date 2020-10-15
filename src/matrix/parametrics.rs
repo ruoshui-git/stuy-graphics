@@ -1,5 +1,5 @@
 use super::Matrix;
-use crate::graphics::{parametrics::Parametric, utils};
+use crate::{parametrics::Parametric, utils};
 use std::f64::consts;
 
 // draw parametric

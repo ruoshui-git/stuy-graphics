@@ -1,4 +1,4 @@
-use crate::graphics::{matrix::Matrix, utils::mapper};
+use crate::{matrix::Matrix, utils::mapper};
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_model_view_projection#Perspective_matrix
 
@@ -67,7 +67,7 @@ impl Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::{matrix::transform, utils::display_edge_matrix, RGB};
+    use crate::{matrix::transform, utils::display_edge_matrix, RGB};
 
     #[test]
     fn test_perspective() {

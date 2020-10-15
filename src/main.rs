@@ -1,4 +1,4 @@
-mod graphics;
+
 
 use graphics::{matrix::transform as tr, processes::pipe_to_magick, Drawer, PPMImg, RGB};
 
