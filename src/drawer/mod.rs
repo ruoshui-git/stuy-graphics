@@ -1,8 +1,9 @@
-use crate::{Canvas, matrix::Matrix, RGB};
+use crate::{matrix::Matrix, Canvas, RGB};
 use std::io;
 
 use super::lights::LightConfig;
 
+pub mod turtle;
 /// A procedural interface to simplfy drawing
 pub struct Drawer<T: Canvas> {
     stack: Vec<Matrix>,
@@ -100,7 +101,7 @@ impl<T: Canvas> Drawer<T> {
         self.canvas.display();
     }
 
-    pub fn write_to_buf(&self, writer: &mut dyn io::Write) -> io::Result<()> {
+    pub fn write_to_buf<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
         self.canvas.write_to_buf(writer)
     }
 }

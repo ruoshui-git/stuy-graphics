@@ -9,8 +9,6 @@ use crate::{
 };
 use std::io;
 
-// turtle will cause problems
-// mod turtle;
 
 pub trait Canvas {
     /// Plot a point on the screen at (`x`, `y`, `z`)
@@ -20,7 +18,7 @@ pub trait Canvas {
     fn width(&self) -> u32;
     fn height(&self) -> u32;
     fn save(&self, filepath: &str) -> io::Result<()>;
-    fn write_to_buf(&self, writer: &mut dyn io::Write) -> io::Result<()>;
+    fn write_to_buf<T: io::Write>(&self, writer: &mut T) -> io::Result<()>;
 
     /// Display the image with imagemagick
     fn display(&self);

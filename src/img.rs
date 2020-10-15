@@ -5,7 +5,7 @@ use std::{
     io::{self, prelude::Write},
 };
 // internal use
-use crate::{processes::pipe_to_magick, utils, Canvas, RGB};
+use crate::{Canvas, RGB, processes::pipe_to_magick, utils};
 use io::BufWriter;
 
 pub struct PPMImg {
@@ -15,8 +15,6 @@ pub struct PPMImg {
     pub x_wrap: bool,
     pub y_wrap: bool,
     pub invert_y: bool,
-    // pub fg_color: RGB,
-    // pub bg_color: RGB,
     data: Vec<RGB>,
     zbuf: Vec<f64>,
 }
@@ -171,6 +169,21 @@ impl Canvas for PPMImg {
         self.height
     }
 
+
+    fn display(&self) {
+        utils::display_ppm(&self);
+    }
+
+    /// Fill image with a certain color
+    fn clear(&mut self, color: RGB) {
+        // let bg = self.bg_color;
+        for d in self.data.iter_mut() {
+            *d = color;
+        }
+
+        self.zbuf = vec![f64::NEG_INFINITY; (self.height * self.width).try_into().unwrap()];
+    }
+
     fn save(&self, filepath: &str) -> io::Result<()> {
         // convert to .png if wanted
         if filepath.ends_with(".ppm") {
@@ -191,20 +204,8 @@ impl Canvas for PPMImg {
         }
     }
 
-    fn display(&self) {
-        utils::display_ppm(&self);
-    }
-
-    /// Fill image with a certain color
-    fn clear(&mut self, color: RGB) {
-        // let bg = self.bg_color;
-        for d in self.data.iter_mut() {
-            *d = color;
-        }
-
-        self.zbuf = vec![f64::NEG_INFINITY; (self.height * self.width).try_into().unwrap()];
-    }
-    fn write_to_buf(&self, writer: &mut dyn Write) -> io::Result<()> {
+    
+    fn write_to_buf<T: Write>(&self, writer: &mut T) -> io::Result<()> {
         self.write_bin_to_buf(writer)
     }
 }

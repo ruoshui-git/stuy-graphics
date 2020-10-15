@@ -1,27 +1,25 @@
 use super::Canvas;
-use crate::graphics::{utils::polar_to_xy, RGB};
+use crate::{colors::RGB, utils::polar_to_xy};
 
-pub struct Turtle {
+// A turtle drawer on the plane Z = 0 (no depth)
+pub struct Turtle<T: Canvas> {
     x: f64,
     y: f64,
     pub angle_deg: f64,
     pub pen_down: bool,
-    img: Box<dyn Canvas>,
+    pub fg_color: RGB,
+    img: T,
 }
 
-impl Turtle {
-    /// Creates a turtle for Canvas
-    /// ## Warning
-    /// Img will move into a Turtle, so any new bindings to the current instance of PPMImg will be invalid.
-    ///
-    /// And therefore only one Turtle is allowed at a time for an Img.
-    fn new(screen: Box<dyn Canvas>, x: f64, y: f64) -> Turtle {
+impl<T: Canvas> Turtle<T> {
+    fn new(screen: T, x: f64, y: f64, fg_color: RGB) -> Turtle<T> {
         Turtle {
             x,
             y,
             angle_deg: 0.0,
             pen_down: false,
             img: screen,
+            fg_color,
         }
     }
 
@@ -30,7 +28,8 @@ impl Turtle {
         let (dx, dy) = polar_to_xy(steps.into(), self.angle_deg);
         let (x1, y1) = (x0 as f64 + dx, y0 as f64 + dy);
         if self.pen_down {
-            self.img.draw_line(x0 as f64, y0 as f64, x1, y1);
+            self.img
+                .draw_line((x0, y0, 0.), (x1, y1, 0.), self.fg_color);
         }
         self.x = x1;
         self.y = y1;
@@ -40,26 +39,19 @@ impl Turtle {
         self.angle_deg = (self.angle_deg + angle_deg) % 360.0;
     }
 
-    pub fn set_color(&mut self, rgb: RGB) {
-        self.img.set_fg_color(rgb);
-    }
-
-    pub fn get_color(&self) -> RGB {
-        self.img.get_fg_color()
-    }
-
     pub fn move_to(&mut self, x: f64, y: f64) {
         if self.pen_down {
-            self.img.draw_line(self.x as f64, self.y as f64, x, y);
+            self.img
+                .draw_line((self.x, self.y, 0.), (x, y, 0.), self.fg_color);
         }
         self.x = x;
         self.y = y;
     }
 
-    /// Get the inner PPMImg instance
+    /// Get the inner Canvas (T) instance
     ///
     /// This method will move the turtle
-    pub fn get_ppm_img(self) -> Box<dyn Canvas> {
+    pub fn get_canvas(self) -> T {
         self.img
     }
 }
