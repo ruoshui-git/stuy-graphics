@@ -77,7 +77,7 @@ impl<T: Canvas> Drawer<T> {
 }
 
 impl<T: Canvas> Drawer<T> {
-    /// Create a new drawer with fg_color white and bg_color black
+    /// Create a new drawer with fg_color white and bg_color black, and default lighting
     pub fn new(canvas: T) -> Self {
         DrawerBuilder::new(canvas).build()
     }
@@ -153,9 +153,9 @@ impl<T: Canvas> Drawer<T> {
         m.add_sphere(center, radius);
         self.render_polygons_with_stack(&m);
     }
-    pub fn add_torus(&mut self, center: (f64, f64, f64), radius1: f64, radius2: f64) {
+    pub fn add_torus(&mut self, center: (f64, f64, f64), r0: f64, r1: f64) {
         let mut m = Matrix::new_polygon_matrix();
-        m.add_torus(center, radius1, radius2);
+        m.add_torus(center, r0, r1);
         self.render_polygons_with_stack(&m);
     }
 }

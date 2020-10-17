@@ -7,7 +7,7 @@ pub mod img;
 pub mod lights;
 pub mod matrix;
 pub mod parametrics;
-pub mod parser;
+pub mod mdl;
 pub mod processes;
 pub mod utils;
 pub mod vector;

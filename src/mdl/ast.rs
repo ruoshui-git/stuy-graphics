@@ -93,8 +93,13 @@ pub(crate) enum Shape {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Point(f64, f64, f64);
+pub(crate) struct Point(pub(crate) f64, pub(crate) f64, pub(crate) f64);
 
+impl Into<(f64, f64, f64)> for Point {
+    fn into(self) -> (f64, f64, f64) {
+        (self.0, self.1, self.2)
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum Animate {
@@ -107,8 +112,8 @@ pub(crate) enum Animate {
     Tween {
         start_frame: u32,
         end_frame: u32,
-        knoblist0: String,
-        knoblist1: String,
+        knoblist0: Symbol,
+        knoblist1: Symbol,
     },
     Frames(u32),
     Vary {
@@ -146,7 +151,7 @@ impl From<Point> for Rgb {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub(crate) struct Symbol(pub(crate) String);
 
 impl Symbol {
@@ -396,8 +401,8 @@ fn parse_tween(i: &str) -> IResult<&str, Animate> {
         Animate::Tween {
             start_frame,
             end_frame,
-            knoblist0: knoblist0.to_owned(),
-            knoblist1: knoblist1.to_owned(),
+            knoblist0: Symbol(knoblist0.to_owned()),
+            knoblist1: Symbol(knoblist1.to_owned()),
         },
     ))
 }

@@ -1,3 +1,5 @@
+use std::fmt;
+
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum Type {
@@ -5,6 +7,26 @@ pub(crate) enum Type {
     Coord(Coord),
     Knob(Knob),
     KnobList(Vec<Knob>),
+}
+
+/// Types without the underlying data, used for type checking
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub enum Kind {
+    Const,
+    Coord,
+    Knob,
+    KnobList,
+}
+
+impl fmt::Display for Kind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "type::{}", match self {
+            Kind::Const => {"constants"}
+            Kind::Coord => {"coord_system"}
+            Kind::Knob => {"knob"}
+            Kind::KnobList => {"knoblist"}
+        })
+    }
 }
 
 #[derive(Debug, PartialEq)]
