@@ -3,7 +3,7 @@ use std::str::FromStr;
 use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take_while1},
-    character::complete::{alpha1, alphanumeric1, multispace0, one_of, space0},
+    character::complete::{alpha1, alphanumeric1, multispace0, one_of},
     combinator::{all_consuming, map, map_res, opt, recognize, value},
     error::ParseError,
     multi::many0,
