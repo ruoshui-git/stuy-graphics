@@ -66,6 +66,7 @@ mesh [constants] :filename [coord_system]
 			- load a mesh or set of edges (in some format that
 			  you can specify) from a file into the pointlist 
 			  and or edge list directly.
+			- ":filename" is a file name preceded by token ":"
 
 Knobs/Animation
 ---------------
@@ -98,9 +99,10 @@ setknobs value		- set all the knobs to value
 
 Lighting
 --------
-light r g b x y z  	- creates a "light" datastructure with rgb values
+light name r g b x y z  	
+			- creates a "light" datastructure with rgb values
 			  r,g,b at location x,y,z.
-			  This is inserted into the symbol table.
+			  This is inserted into the symbol table under "name".
 
 ambient r g b 		- specifies how much ambient light is in the scene
 
@@ -128,7 +130,7 @@ camera eye aim		- establishes a camera. Eye and aim are
 save filename		- save the image in its current state under
 			  the name "filename."
 
-gereate_rayfiles	- Instruct the interpreter to generate source
+generate_rayfiles	- Instruct the interpreter to generate source
 			  files for a ray tracer for each frame rendered.
 
 focal value		- set the focal length of the camera
