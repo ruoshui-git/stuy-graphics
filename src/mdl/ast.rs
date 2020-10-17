@@ -4,7 +4,7 @@ use nom::{
     branch::alt,
     bytes::complete::{is_not, tag, take_while1},
     character::complete::{alpha1, alphanumeric1, multispace0, one_of, space0},
-    combinator::{all_consuming, map_res, opt, recognize, value},
+    combinator::{all_consuming, map, map_res, opt, recognize, value},
     error::ParseError,
     multi::many0,
     number::complete::double,
@@ -42,10 +42,7 @@ fn parse_cmd(i: &str) -> IResult<&str, Command> {
 ///
 /// Returns None in as data if only comment is preset
 pub(crate) fn parse_line(i: &str) -> IResult<&str, Option<Command>> {
-    dbg!(all_consuming(terminated(
-        opt(parse_cmd),
-        opt(ws(parse_comment))
-    ))(i))
+    all_consuming(terminated(opt(parse_cmd), opt(ws(parse_comment))))(i)
 }
 
 fn parse_comment(i: &str) -> IResult<&str, (&str, &str)> {
@@ -209,11 +206,10 @@ where
     // preceded(space0, inner)
 }
 
-fn triple_float(input: &str) -> IResult<&str, Point> {
-    let (input, x) = ws(double)(input)?;
-    let (input, y) = ws(double)(input)?;
-    let (input, z) = ws(double)(input)?;
-    Ok((input, Point(x, y, z)))
+fn triple_float(i: &str) -> IResult<&str, Point> {
+    map(tuple((ws(double), ws(double), ws(double))), |(x, y, z)| {
+        Point(x, y, z)
+    })(i)
 }
 
 /// Parsing a symbol that starts with a letter and may contain underscores, letters and numbers

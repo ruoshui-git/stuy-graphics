@@ -72,9 +72,9 @@ pub(crate) fn exec_cmds(commands: Vec<(usize, Command)>) -> EngineResult<()> {
                     constants: _,
                     filename: _,
                     coord: _,
-                } => eprintln!("mesh cmd is unsupported"),
+                } => eprintln!("unimplemented: mesh"),
             },
-            Command::AnimateCmd(a) => eprintln!("unsupported: {:?}", a),
+            Command::AnimateCmd(a) => eprintln!("unimplemented: {:?}", a),
             Command::LightingCmd(c) => match c {
                 ast::Lighting::Light {
                     name: _,
@@ -89,15 +89,15 @@ pub(crate) fn exec_cmds(commands: Vec<(usize, Command)>) -> EngineResult<()> {
             },
             Command::MiscCmd(cmd) => match cmd {
                 ast::Misc::SaveCoord(_) => {}
-                ast::Misc::Camera { eye: _, aim: _ } => eprintln!("unsupported: camera"),
+                ast::Misc::Camera { eye: _, aim: _ } => eprintln!("unimplemented: camera"),
                 ast::Misc::Save(filepath) => drawer.save(&filepath).or_else(|e| {
                     Err(EngineError::Runtime {
                         line,
                         source: e.into(),
                     })
                 })?,
-                ast::Misc::GenerateRayfiles => eprintln!("unsupported: generate_rayfiles"),
-                ast::Misc::Focal(_) => eprintln!("unsupported: focal"),
+                ast::Misc::GenerateRayfiles => eprintln!("unimplemented: generate_rayfiles"),
+                ast::Misc::Focal(_) => eprintln!("unimplemented: focal"),
                 ast::Misc::Display => drawer.display(),
             },
         }
