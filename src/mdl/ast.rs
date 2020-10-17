@@ -214,7 +214,7 @@ fn triple_float(i: &str) -> IResult<&str, Point> {
 
 /// Parsing a symbol that starts with a letter and may contain underscores, letters and numbers
 fn symbol(input: &str) -> IResult<&str, &str> {
-    recognize(pair(alpha1, many0(alt((alphanumeric1, tag("_"))))))(input)
+    recognize(pair(alpha1, many0(alt((alphanumeric1, tag("-"), tag("."), tag("_"))))))(input)
 }
 
 fn opt_symbol(i: &str) -> IResult<&str, Option<Symbol>> {
