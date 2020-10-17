@@ -11,8 +11,9 @@ pub type EngineResult<T> = Result<T, EngineError>;
 pub enum EngineError {
     #[error("io error: {0}")]
     Io(#[from] io::Error),
-    #[error("syntax error on input {input}: {kind:?}")]
+    #[error("syntax error on line {line}: input: {input}, type: {kind:?}")]
     Syntax {
+        line: usize,
         input: String,
         kind: nom::error::ErrorKind,
     },

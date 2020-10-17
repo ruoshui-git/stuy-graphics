@@ -1,4 +1,11 @@
-use std::{collections::HashMap, fs::File, io::{prelude::*, BufReader}, ops::Deref, ops::DerefMut, path::Path};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{prelude::*, BufReader},
+    ops::Deref,
+    ops::DerefMut,
+    path::Path,
+};
 
 use super::{
     ast::{self, Command, Symbol},
@@ -72,10 +79,11 @@ pub(crate) fn parse_file<T: AsRef<Path>>(path: T) -> Result<Vec<(usize, Command)
     let mut cmd_list: Vec<(usize, Command)> = vec![];
 
     for (lnum, line) in fin.lines().enumerate() {
-        // let (_, opcmd) =
+        let lnum = lnum + 1;
         if let (_, Some(cmd)) = ast::parse_line(&line?).map_err(|nom_err| match nom_err {
             nom::Err::Incomplete(_) => unreachable!(),
             nom::Err::Error(e) | nom::Err::Failure(e) => EngineError::Syntax {
+                line: lnum,
                 input: e.0.to_owned(),
                 kind: e.1,
             },

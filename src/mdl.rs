@@ -77,6 +77,7 @@ pub(crate) fn exec_cmds(commands: Vec<(usize, Command)>) -> EngineResult<()> {
             Command::AnimateCmd(a) => eprintln!("unsupported: {:?}", a),
             Command::LightingCmd(c) => match c {
                 ast::Lighting::Light {
+                    name: _,
                     color: _,
                     location: _,
                 } => eprintln!("unimplemented: light"),

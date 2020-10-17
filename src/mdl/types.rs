@@ -29,7 +29,7 @@ impl fmt::Display for Kind {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) struct ObjConst {
     pub(crate) kar: f64,
     pub(crate) kdr: f64,
