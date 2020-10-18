@@ -1,6 +1,13 @@
 # MDL
 
-![creepy donut](./creepy-donut.gif)
+![creepy donut](./products/w10-creepy-donut.gif)
+
+            location: Vec3(250., 400., 0.),
+Light locations: 
+
+- (250., 400., 0.) - bright yellow
+- (250., 100., 0.) - bright green
+- (250., 250., 0.) - bright blue
 
 Uses nom (a parser combinator) to parse mdl file. Each line is parsed individually.
 
