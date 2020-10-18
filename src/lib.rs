@@ -4,7 +4,7 @@ pub mod canvas;
 pub mod colors;
 pub mod drawer;
 pub mod img;
-pub mod lights;
+pub mod light;
 pub mod matrix;
 pub mod parametrics;
 pub mod mdl;

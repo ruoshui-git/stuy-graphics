@@ -1,7 +1,5 @@
-use crate::{matrix::Matrix, Canvas, RGB};
+use crate::{Canvas, RGB, light::{self, Light, LightProps}, matrix::Matrix};
 use std::io;
-
-use super::lights::LightConfig;
 
 pub mod turtle;
 /// A procedural interface to simplfy drawing
@@ -10,14 +8,17 @@ pub struct Drawer<T: Canvas> {
     canvas: T,
     pub fg_color: RGB,
     pub bg_color: RGB,
-    pub light: LightConfig,
+    /// Lights that should be applied to all objects
+    ///
+    /// If using custom lighting, clone this vec and append
+    pub env_lights: Vec<Light>,
 }
 
 pub struct DrawerBuilder<T: Canvas> {
     canvas: T,
     fg_color: RGB,
     bg_color: RGB,
-    light: LightConfig,
+    lights: Vec<Light>,
 }
 
 impl<T: Canvas> DrawerBuilder<T> {
@@ -27,7 +28,7 @@ impl<T: Canvas> DrawerBuilder<T> {
             canvas,
             fg_color: RGB::WHITE,
             bg_color: RGB::BLACK,
-            light: LightConfig::TEST_LIGHT,
+            lights: vec![],
         }
     }
 
@@ -41,8 +42,13 @@ impl<T: Canvas> DrawerBuilder<T> {
         self
     }
 
-    pub fn with_light(mut self, light: LightConfig) -> Self {
-        self.light = light;
+    pub fn with_lights(mut self, lights: Vec<Light>) -> Self {
+        self.lights = lights;
+        self
+    }
+
+    pub fn add_light(mut self, light: Light) -> Self {
+        self.lights.push(light);
         self
     }
 
@@ -52,7 +58,12 @@ impl<T: Canvas> DrawerBuilder<T> {
             canvas: self.canvas,
             fg_color: self.fg_color,
             bg_color: self.bg_color,
-            light: self.light,
+            // use default lights if no light is added
+            env_lights: if self.lights.is_empty() {
+                light::default_lights()
+            } else {
+                self.lights
+            },
         }
     }
 }
@@ -64,9 +75,10 @@ impl<T: Canvas> Drawer<T> {
             .render_edge_matrix(&(m * self.get_top_matrix()), self.fg_color)
     }
 
-    pub fn render_polygons_with_stack(&mut self, m: &Matrix) {
+    pub fn render_polygons_with_stack(&mut self, m: &Matrix, props: Option<LightProps>) {
+        let props = props.unwrap_or(LightProps::DEFAULT_PROPS);
         self.canvas
-            .render_polygon_matrix(&(m * self.get_top_matrix()), self.light)
+            .render_polygon_matrix(&(m * self.get_top_matrix()), props, &self.env_lights)
     }
 
     fn get_top_matrix(&self) -> &Matrix {
@@ -143,20 +155,20 @@ impl<T: Canvas> Drawer<T> {
 
 // 2d shapes
 impl<T: Canvas> Drawer<T> {
-    pub fn add_box(&mut self, (x, y, z): (f64, f64, f64), dx: f64, dy: f64, dz: f64) {
+    pub fn add_box(&mut self, (x, y, z): (f64, f64, f64), dx: f64, dy: f64, dz: f64, props: Option<LightProps>) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_box((x, y, z), dx, dy, dz);
-        self.render_polygons_with_stack(&m);
+        self.render_polygons_with_stack(&m, props);
     }
-    pub fn add_sphere(&mut self, center: (f64, f64, f64), radius: f64) {
+    pub fn add_sphere(&mut self, center: (f64, f64, f64), radius: f64, props: Option<LightProps>) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_sphere(center, radius);
-        self.render_polygons_with_stack(&m);
+        self.render_polygons_with_stack(&m, props);
     }
-    pub fn add_torus(&mut self, center: (f64, f64, f64), r0: f64, r1: f64) {
+    pub fn add_torus(&mut self, center: (f64, f64, f64), r0: f64, r1: f64, props: Option<LightProps>) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_torus(center, r0, r1);
-        self.render_polygons_with_stack(&m);
+        self.render_polygons_with_stack(&m, props);
     }
 }
 

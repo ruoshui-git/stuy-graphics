@@ -1,12 +1,6 @@
 // extern crate rand;
 // use rand::Rng;
-use super::lights::LightConfig;
-use crate::{
-    matrix::Matrix,
-    utils::{mapper, polar_to_xy},
-    vector::Vec3,
-    RGB,
-};
+use crate::{RGB, light::Light, light::{self, LightProps}, matrix::Matrix, utils::{mapper, polar_to_xy}, vector::Vec3};
 use std::io;
 
 
@@ -195,7 +189,7 @@ pub trait Canvas {
     ///
     /// Removes hidden surface with back-face culling
     /// Also draws scanlines
-    fn render_polygon_matrix(&mut self, m: &Matrix, light: LightConfig) {
+    fn render_polygon_matrix(&mut self, m: &Matrix, props: LightProps, lights: &[Light]) {
         // view vector for now: v = <0, 0, 1>, not needed for computation
 
         let mut iter = m.iter_by_row();
@@ -217,11 +211,15 @@ pub trait Canvas {
 
             let surface_normal = (v1 - v0).cross(v2 - v0);
             // let surface_normal = (v2 - v0).cross(v1 - v0);
-            let viewvecn = light.view.norm();
-
-            if surface_normal * viewvecn <= 0. {
+            
+            // view vector is hard_coded for now
+            let viewvec = Vec3(0., 0., 1.);
+            
+            if surface_normal * viewvec <= 0. {
                 continue;
             }
+            
+            let location = (v0 + v1 + v2) / 3.;
 
             // self.draw_line(p0, p1);
             // self.draw_line(p1, p2);
@@ -236,7 +234,7 @@ pub trait Canvas {
                 //     rng.gen_range(0, 255),
                 // ));
 
-                let color = light.get_color_from_norm(surface_normal);
+                let color = light::compute_color(&props, lights, surface_normal, viewvec, location);
                 // let color = RGB::WHITE;
 
                 // sort points by y value
