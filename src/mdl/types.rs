@@ -1,12 +1,25 @@
 use std::fmt;
 
+use crate::light::LightProps;
+
 
 #[derive(Debug, PartialEq)]
-pub(crate) enum Type {
-    ObjConst(ObjConst),
+pub enum Type {
+    LightProps(LightProps),
     Coord(Coord),
     Knob(Knob),
     KnobList(Vec<Knob>),
+}
+
+impl Type {
+    pub fn kind(&self) -> Kind {
+        match self {
+            Type::LightProps(_) => Kind::Const,
+            Type::Coord(_) => Kind::Coord,
+            Type::Knob(_) => Kind::Knob,
+            Type::KnobList(_) => Kind::KnobList,
+        }
+    }
 }
 
 /// Types without the underlying data, used for type checking
@@ -16,6 +29,17 @@ pub enum Kind {
     Coord,
     Knob,
     KnobList,
+}
+
+impl From<&Type> for Kind {
+    fn from(t: &Type) -> Self {
+        match t {
+            Type::LightProps(_) => Kind::Const,
+            Type::Coord(_) => Kind::Coord,
+            Type::Knob(_) => Kind::Knob,
+            Type::KnobList(_) => Kind::KnobList,
+        }
+    }
 }
 
 impl fmt::Display for Kind {
@@ -29,27 +53,11 @@ impl fmt::Display for Kind {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub(crate) struct ObjConst {
-    pub(crate) kar: f64,
-    pub(crate) kdr: f64,
-    pub(crate) ksr: f64,
-    pub(crate) kag: f64,
-    pub(crate) kdg: f64,
-    pub(crate) ksg: f64,
-    pub(crate) kab: f64,
-    pub(crate) kdb: f64,
-    pub(crate) ksb: f64,
-    pub(crate) ir: Option<f64>,
-    pub(crate) ig: Option<f64>,
-    pub(crate) ib: Option<f64>,
-}
-
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Knob(f64);
+pub struct Knob(f64);
 
 
 /// Probably will be unused
 #[derive(Debug, PartialEq)]
-pub(crate) struct Coord;
+pub struct Coord;

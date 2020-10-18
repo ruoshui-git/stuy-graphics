@@ -12,8 +12,6 @@ use nom::{
     IResult,
 };
 
-use super::types::ObjConst;
-
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum Command {
     Push,
@@ -151,6 +149,25 @@ pub(crate) enum Lighting {
     },
     Shading(ShadingMode),
 }
+
+
+/// Same thing as light::LightProps, but this is for parsing types, that one is used by the engine
+#[derive(Debug, PartialEq, Clone)]
+pub(crate) struct ObjConst {
+    pub(crate) kar: f64,
+    pub(crate) kdr: f64,
+    pub(crate) ksr: f64,
+    pub(crate) kag: f64,
+    pub(crate) kdg: f64,
+    pub(crate) ksg: f64,
+    pub(crate) kab: f64,
+    pub(crate) kdb: f64,
+    pub(crate) ksb: f64,
+    pub(crate) ir: Option<f64>,
+    pub(crate) ig: Option<f64>,
+    pub(crate) ib: Option<f64>,
+}
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Rgb {
