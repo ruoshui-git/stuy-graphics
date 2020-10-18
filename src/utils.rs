@@ -2,7 +2,7 @@ use std::fs::File;
 
 use std::path::Path;
 
-use crate::canvas::Canvas;
+use crate::{canvas::Canvas, light::{self, LightProps}};
 
 pub(crate) fn create_file(filepath: &str) -> File {
     let path = Path::new(filepath);
@@ -49,7 +49,7 @@ pub(crate) fn compute_hermite3_coef(p0: f64, p1: f64, r0: f64, r1: f64) -> (f64,
 use crate::{Matrix, PPMImg};
 use std::{fs, process::Command};
 
-use super::{lights::LightConfig, RGB};
+use super::RGB;
 
 pub(crate) fn display_ppm(img: &PPMImg) {
     let tmpfile_name = "tmp.ppm";
@@ -82,12 +82,12 @@ pub(crate) fn display_edge_matrix(m: &Matrix, ndc: bool, color: RGB) {
 }
 
 /// Convenience method  to display polygon matrix for testing purposes
-pub(crate) fn display_polygon_matrix(m: &Matrix, ndc: bool, light: LightConfig) {
-    let mut img = PPMImg::with_bg(500, 500, 225, RGB::WHITE);
+pub(crate) fn display_polygon_matrix(m: &Matrix, ndc: bool) {
+    let mut img = PPMImg::with_bg(500, 500, 225, RGB::BLACK);
     if ndc {
         unimplemented!("Displaying polygon matrix in ndc is not implemented.");
     } else {
-        img.render_polygon_matrix(m, light);
+        img.render_polygon_matrix(m, LightProps::DEFAULT_PROPS,&light::default_lights());
     }
     display_ppm(&img);
 }

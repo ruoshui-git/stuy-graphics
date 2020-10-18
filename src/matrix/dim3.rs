@@ -198,7 +198,7 @@ impl Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{lights::LightConfig, matrix::transform, utils::display_polygon_matrix};
+    use crate::{matrix::transform, utils::display_polygon_matrix};
 
     #[test]
     fn draw_sphere() {
@@ -206,7 +206,7 @@ mod tests {
         m.add_sphere((250., 250., 0.), 40.);
         m *= transform::rotatex(40.) * transform::rotatey(90.);
         println!("len of array: {}", m.data.len());
-        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
+        display_polygon_matrix(&m, false);
     }
 
     #[test]
@@ -232,7 +232,7 @@ mod tests {
         let mut m = Matrix::new_edge_matrix();
         m.add_torus((250., 250., 0.), 30., 100.);
         m *= transform::rotatex(40.);
-        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
+        display_polygon_matrix(&m, false);
     }
 
     // rotate
@@ -252,7 +252,7 @@ mod tests {
             // * transform::rotatey(30.)
             // * transform::rotatez(30.)
             * transform::mv(250., 50., 0.);
-        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
+        display_polygon_matrix(&m, false);
     }
 
     #[test]
@@ -265,6 +265,6 @@ mod tests {
             * transform::rotatex(40.)
             * transform::rotatey(20.);
 
-        display_polygon_matrix(&m, false, LightConfig::TEST_LIGHT);
+        display_polygon_matrix(&m, false);
     }
 }

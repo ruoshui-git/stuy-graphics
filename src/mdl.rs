@@ -1,7 +1,7 @@
-mod ast;
-mod parser;
-mod result;
-mod types;
+pub mod ast;
+pub mod parser;
+pub mod result;
+pub mod types;
 
 use std::{path::Path, path::PathBuf};
 
@@ -45,14 +45,14 @@ pub(crate) fn exec_cmds(commands: Vec<(usize, Command)>) -> EngineResult<()> {
                     center,
                     r,
                     coord,
-                } => drawer.add_sphere(center.into(), r),
+                } => drawer.add_sphere(center.into(), r, symbols.find_props(&constants)?),
                 ast::Shape::Torus {
                     constants,
                     center,
                     r0,
                     r1,
                     coord,
-                } => drawer.add_torus(center.into(), r0, r1),
+                } => drawer.add_torus(center.into(), r0, r1, symbols.find_props(&constants)?),
                 ast::Shape::Box {
                     constants,
                     corner,
@@ -60,7 +60,7 @@ pub(crate) fn exec_cmds(commands: Vec<(usize, Command)>) -> EngineResult<()> {
                     width,
                     depth,
                     coord,
-                } => drawer.add_box(corner.into(), width, height, depth),
+                } => drawer.add_box(corner.into(), width, height, depth, symbols.find_props(&constants)?),
                 ast::Shape::Line {
                     constants,
                     point0,
@@ -83,7 +83,7 @@ pub(crate) fn exec_cmds(commands: Vec<(usize, Command)>) -> EngineResult<()> {
                 } => eprintln!("unimplemented: light"),
                 ast::Lighting::Ambient(_) => eprintln!("unimplemented: ambient"),
                 ast::Lighting::Constants { name, value } => {
-                    symbols.insert(name, Type::ObjConst(value));
+                    symbols.insert(name, Type::LightProps(value.into()));
                 }
                 ast::Lighting::Shading(_) => {}
             },
