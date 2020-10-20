@@ -1,3 +1,3 @@
 
 run:
-	cargo test --release script
+	cargo run --release --bin mdl face.mdl
