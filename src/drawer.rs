@@ -1,11 +1,19 @@
-use crate::{Canvas, RGB, light::{self, Light, LightProps}, matrix::Matrix};
-use std::io;
+use crate::{
+    light::{self, Light, LightProps},
+    matrix::Matrix,
+    Canvas, RGB,
+};
+use std::io::{self, Cursor, Write};
 
 pub mod turtle;
 /// A procedural interface to simplfy drawing
 pub struct Drawer<T: Canvas> {
     stack: Vec<Matrix>,
     canvas: T,
+    /// Buffer written to when drawer.flush() is called
+    ///
+    /// This will be public because changing it doesn't affect any internal representation
+    pub writer: Box<dyn Write>,
     pub fg_color: RGB,
     pub bg_color: RGB,
     /// Lights that should be applied to all objects
@@ -19,16 +27,20 @@ pub struct DrawerBuilder<T: Canvas> {
     fg_color: RGB,
     bg_color: RGB,
     lights: Vec<Light>,
+    writer: Box<dyn Write>,
 }
 
 impl<T: Canvas> DrawerBuilder<T> {
     /// Fill a drawer
+    ///
+    /// Default `fg_color` is white, `bg_color` is black, `lights` is empty
     pub fn new(canvas: T) -> Self {
         Self {
             canvas,
             fg_color: RGB::WHITE,
             bg_color: RGB::BLACK,
             lights: vec![],
+            writer: Box::new(Cursor::new(Vec::new())),
         }
     }
 
@@ -52,6 +64,11 @@ impl<T: Canvas> DrawerBuilder<T> {
         self
     }
 
+    pub fn with_writer(mut self, writer: Box<dyn Write>) -> Self {
+        self.writer = writer;
+        self
+    }
+
     pub fn build(self) -> Drawer<T> {
         Drawer {
             stack: new_stack(),
@@ -64,6 +81,7 @@ impl<T: Canvas> DrawerBuilder<T> {
             } else {
                 self.lights
             },
+            writer: self.writer,
         }
     }
 }
@@ -116,6 +134,11 @@ impl<T: Canvas> Drawer<T> {
     pub fn write_to_buf<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
         self.canvas.write_to_buf(writer)
     }
+
+    /// Write image data to a default buffer (Box<dyn Write>)
+    pub fn flush(&mut self) -> io::Result<()> {
+        self.canvas.write_to_buf(&mut self.writer)
+    }
 }
 
 // one dimensional stuff
@@ -155,7 +178,14 @@ impl<T: Canvas> Drawer<T> {
 
 // 2d shapes
 impl<T: Canvas> Drawer<T> {
-    pub fn add_box(&mut self, (x, y, z): (f64, f64, f64), dx: f64, dy: f64, dz: f64, props: Option<LightProps>) {
+    pub fn add_box(
+        &mut self,
+        (x, y, z): (f64, f64, f64),
+        dx: f64,
+        dy: f64,
+        dz: f64,
+        props: Option<LightProps>,
+    ) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_box((x, y, z), dx, dy, dz);
         self.render_polygons_with_stack(&m, props);
@@ -165,7 +195,13 @@ impl<T: Canvas> Drawer<T> {
         m.add_sphere(center, radius);
         self.render_polygons_with_stack(&m, props);
     }
-    pub fn add_torus(&mut self, center: (f64, f64, f64), r0: f64, r1: f64, props: Option<LightProps>) {
+    pub fn add_torus(
+        &mut self,
+        center: (f64, f64, f64),
+        r0: f64,
+        r1: f64,
+        props: Option<LightProps>,
+    ) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_torus(center, r0, r1);
         self.render_polygons_with_stack(&m, props);
