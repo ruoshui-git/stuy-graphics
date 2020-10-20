@@ -80,7 +80,7 @@ pub fn compute_color(
                 Light::Point {
                     color: pt_color,
                     location: pt_location,
-                    fatt: get_intensity,
+                    fatt: intensity_from_distance,
                 } => {
                     // deal with diffuse and specular reflections here
 
@@ -96,7 +96,7 @@ pub fn compute_color(
                         * (((2 * normaln * ndotdir - dirvecn) * viewn).max(0.).powi(10));
 
                     (idiffuse.limit(0., 255.) + ispecular.limit_max(255.))
-                        * get_intensity(dirvec.mag())
+                        * intensity_from_distance(dirvec.mag())
                 }
             }
             .limit(0., 255.))
