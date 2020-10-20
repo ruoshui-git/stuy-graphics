@@ -1,4 +1,7 @@
-# MDL
+# work 11 Animation
+
+
+# work 10 MDL
 
 ![creepy donut](./products/w10-creepy-donut.gif)
 
@@ -12,7 +15,7 @@ Light locations:
 Uses nom (a parser combinator) to parse mdl file. Each line is parsed individually.
 
 
-# Changes
+## changes
 
 - Add dependency on `nom` and `thiserror` crates
 - Refactor lights module
