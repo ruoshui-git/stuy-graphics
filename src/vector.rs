@@ -29,6 +29,10 @@ impl Vec3 {
 }
 
 impl Vec3 {
+    pub const ZEROS: Self = Self(0., 0., 0.);
+}
+
+impl Vec3 {
     pub fn dot(&self, other: Self) -> f64 {
         self.0 * other.0 + self.1 * other.1 + self.2 * other.2
     }
