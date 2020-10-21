@@ -51,26 +51,23 @@ impl convert::From<HSL> for RGB {
     // https://en.wikipedia.org/wiki/HSL_and_HSV#HSL_to_RGB_alternative
     fn from(hsl: HSL) -> RGB {
         let hue = (hsl.h * 360.0).round() as i32;
-        let a = hsl.s * fmin2(hsl.l, 1.0 - hsl.l, 1000);
-        let f = |n| {
+        let a = hsl.s * hsl.l.min(1.0 - hsl.l);
+        let f = |n: i32| {
             hsl.l
-                - a * fmax2(
-                    -1.0,
-                    cmp::min(
-                        cmp::min((n + hue / 30) % 12 - 3, 9 - (n + hue / 30) % 12),
-                        1,
-                    ) as f64,
-                    1000,
+                - a * (-1.0f64).max(
+                    ((n + hue / 30) % 12 - 3)
+                        .min(9 - (n + hue / 30) % 12)
+                        .min(1) as f64,
                 )
         };
-        let (r, g, b) = (
+        let (red, green, blue) = (
             f(0).round() as i32,
             f(8).round() as i32,
             f(4).round() as i32,
         );
-        assert!(r == 1 || r == 0);
-        assert!(g == 1 || g == 0);
-        assert!(b == 1 || b == 0);
+        assert!(red == 1 || red == 0);
+        assert!(green == 1 || green == 0);
+        assert!(blue == 1 || blue == 0);
         RGB {
             red: (f(0) * 255.0) as u16,
             green: (f(8) * 255.0) as u16,
