@@ -344,7 +344,8 @@ impl Interpreter {
                     knob_states.push(table);
                 }
 
-                let mut magick = pipe_to_magick(vec!["ppm:-", &format!("{}.gif", basename)]);
+                let mut magick =
+                    pipe_to_magick(vec!["-delay", "1.7", "ppm:-", &format!("{}.gif", basename)]);
                 let writer = magick.stdin.take().unwrap();
                 let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 255))
                     .with_writer(Box::new(writer))
