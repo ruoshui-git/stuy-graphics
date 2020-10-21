@@ -1,6 +1,8 @@
 # Work 11 - Animation
 
 ![3rd return of fakemotion](./products/w11-3rd-return-of-fakemotion-d3.8s2.gif)
+
+
 3rd return of fakemotion
 
 Note on file name: "d" is for delay, "s" is for step
