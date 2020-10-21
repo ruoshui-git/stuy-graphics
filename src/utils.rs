@@ -2,7 +2,10 @@ use std::fs::File;
 
 use std::path::Path;
 
-use crate::{canvas::Canvas, light::{self, LightProps}};
+use crate::{
+    canvas::Canvas,
+    light::{self, LightProps},
+};
 
 pub(crate) fn create_file(filepath: &str) -> File {
     let path = Path::new(filepath);
@@ -87,7 +90,7 @@ pub(crate) fn display_polygon_matrix(m: &Matrix, ndc: bool) {
     if ndc {
         unimplemented!("Displaying polygon matrix in ndc is not implemented.");
     } else {
-        img.render_polygon_matrix(m, LightProps::DEFAULT_PROPS,&light::default_lights());
+        img.render_polygon_matrix(m, &LightProps::DEFAULT_PROPS, &light::default_lights());
     }
     display_ppm(&img);
 }

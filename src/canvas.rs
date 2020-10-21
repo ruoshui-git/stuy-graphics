@@ -1,8 +1,14 @@
 // extern crate rand;
 // use rand::Rng;
-use crate::{RGB, light::Light, light::{self, LightProps}, matrix::Matrix, utils::{mapper, polar_to_xy}, vector::Vec3};
+use crate::{
+    light::Light,
+    light::{self, LightProps},
+    matrix::Matrix,
+    utils::{mapper, polar_to_xy},
+    vector::Vec3,
+    RGB,
+};
 use std::io;
-
 
 pub trait Canvas {
     /// Plot a point on the screen at (`x`, `y`, `z`)
@@ -144,7 +150,7 @@ pub trait Canvas {
         let (x1, y1, z) = (point.0 + dx, point.1 + dy, point.2);
 
         self.draw_line(point, (x1, y1, z), color);
-        return (x1, y1, z);
+        (x1, y1, z)
     }
 
     //----------------------------------------- render edge matrix on screen
@@ -189,7 +195,7 @@ pub trait Canvas {
     ///
     /// Removes hidden surface with back-face culling
     /// Also draws scanlines
-    fn render_polygon_matrix(&mut self, m: &Matrix, props: LightProps, lights: &[Light]) {
+    fn render_polygon_matrix(&mut self, m: &Matrix, props: &LightProps, lights: &[Light]) {
         // view vector for now: v = <0, 0, 1>, not needed for computation
 
         let mut iter = m.iter_by_row();
@@ -211,14 +217,14 @@ pub trait Canvas {
 
             let surface_normal = (v1 - v0).cross(v2 - v0);
             // let surface_normal = (v2 - v0).cross(v1 - v0);
-            
+
             // view vector is hard_coded for now
             let viewvec = Vec3(0., 0., 1.);
-            
+
             if surface_normal * viewvec <= 0. {
                 continue;
             }
-            
+
             let location = (v0 + v1 + v2) / 3.;
 
             // self.draw_line(p0, p1);
@@ -310,7 +316,8 @@ pub trait Canvas {
     }
 
     fn draw_scanline(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64), color: RGB) {
-        assert_eq!(p0.1, p1.1, "Scanline should be horizontal");
+        assert!((p0.1 - p1.1).abs() < f64::EPSILON, "Scanline should be horizontal");
+
 
         // swap variables if needed, since we are always going from left to right
         let (p0, p1) = if p0.0 > p1.0 { (p1, p0) } else { (p0, p1) };

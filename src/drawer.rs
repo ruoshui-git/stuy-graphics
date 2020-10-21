@@ -93,8 +93,8 @@ impl<T: Canvas> Drawer<T> {
             .render_edge_matrix(&(m * self.get_top_matrix()), self.fg_color)
     }
 
-    pub fn render_polygons_with_stack(&mut self, m: &Matrix, props: Option<LightProps>) {
-        let props = props.unwrap_or(LightProps::DEFAULT_PROPS);
+    pub fn render_polygons_with_stack(&mut self, m: &Matrix, props: Option<&LightProps>) {
+        let props = props.unwrap_or(&LightProps::DEFAULT_PROPS);
         self.canvas
             .render_polygon_matrix(&(m * self.get_top_matrix()), props, &self.env_lights)
     }
@@ -138,6 +138,13 @@ impl<T: Canvas> Drawer<T> {
     /// Write image data to a default buffer (Box<dyn Write>)
     pub fn flush(&mut self) -> io::Result<()> {
         self.canvas.write_to_buf(&mut self.writer)
+    }
+
+    /// Finish drawing, so flush writer again and drop it
+    pub fn finish(mut self) -> io::Result<()> {
+        self.writer.flush()?;
+        drop(self.writer);
+        Ok(())
     }
 }
 
@@ -184,13 +191,13 @@ impl<T: Canvas> Drawer<T> {
         dx: f64,
         dy: f64,
         dz: f64,
-        props: Option<LightProps>,
+        props: Option<&LightProps>,
     ) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_box((x, y, z), dx, dy, dz);
         self.render_polygons_with_stack(&m, props);
     }
-    pub fn add_sphere(&mut self, center: (f64, f64, f64), radius: f64, props: Option<LightProps>) {
+    pub fn add_sphere(&mut self, center: (f64, f64, f64), radius: f64, props: Option<&LightProps>) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_sphere(center, radius);
         self.render_polygons_with_stack(&m, props);
@@ -200,7 +207,7 @@ impl<T: Canvas> Drawer<T> {
         center: (f64, f64, f64),
         r0: f64,
         r1: f64,
-        props: Option<LightProps>,
+        props: Option<&LightProps>,
     ) {
         let mut m = Matrix::new_polygon_matrix();
         m.add_torus(center, r0, r1);

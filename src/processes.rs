@@ -18,3 +18,10 @@ pub fn pipe_to_magick(args: Vec<&str>) -> Child {
         .spawn()
         .expect("Can't spawn imagemagick")
 }
+
+/// Wait for `magick` to exit with the appropriate printlns. This is not designed to be composable. It's used usually as the last statement in program.
+pub fn wait_for_magick(mut magick: Child) {
+    println!("Waiting for magick to exit...");
+    let exit_status = magick.wait().expect("Failed to wait on magick");
+    println!("magick {}", exit_status);
+}
