@@ -1,3 +1,3 @@
 
 run:
-	cargo run --release --bin mdl face.mdl
+	cargo run --release --bin mdl scripts/simple_100.mdl
