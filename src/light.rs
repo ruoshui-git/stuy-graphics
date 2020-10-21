@@ -149,41 +149,52 @@ impl LightProps {
         areflect: Vec3(0.3, 0.3, 0.3),
         dreflect: Vec3(0.5, 0.5, 0.5),
         sreflect: Vec3(0.5, 0.5, 0.5),
-        intensities: Vec3(0., 0., 0.),
+        intensities: Vec3::ZEROS,
+    };
+
+    pub const BRASS: Self = Self {
+        areflect: Vec3(0.329412, 0.223529, 0.027451),
+        dreflect: Vec3(0.780392, 0.568627, 0.113725),
+        sreflect: Vec3(0.992157, 0.941176, 0.807843),
+        intensities: Vec3::ZEROS,
+        // shininess: 27.8974,
+    };
+
+    pub const POLISHED_COPPER: Self = Self {
+        areflect: Vec3(0.2295, 0.08825, 0.0275),       // a=1
+        dreflect: Vec3(0.5508, 0.2118, 0.066),         // a=1
+        sreflect: Vec3(0.580594, 0.223257, 0.0695701), // a=1
+        intensities: Vec3::ZEROS,
+        // shininess: 51.2
+    };
+
+    pub const GOLD: Self = Self {
+        areflect: Vec3(0.24725, 0.1995, 0.0745),      // a=1
+        dreflect: Vec3(0.75164, 0.60648, 0.22648),    // a=1
+        sreflect: Vec3(0.628281, 0.555802, 0.366065), // a=1
+        // shininess: 51.2
+        intensities: Vec3::ZEROS,
+    };
+
+    pub const POLISHED_GOLD: Self = Self {
+        areflect: Vec3(0.24725, 0.2245, 0.0645),
+        dreflect: Vec3(0.34615, 0.3143, 0.0903),
+        sreflect: Vec3(0.797357, 0.723991, 0.208006),
+        intensities: Vec3::ZEROS,
+    };
+
+    pub const SILVER: Self = Self {
+        areflect: Vec3(0.19225, 0.19225, 0.19225),    //a=1
+        dreflect: Vec3(0.50754, 0.50754, 0.50754),    //a=1
+        sreflect: Vec3(0.508273, 0.508273, 0.508273), //a=1
+        intensities: Vec3::ZEROS,
+        // shininess: 51.2
+    };
+
+    pub const POLISHED_SILVER: Self = Self {
+        areflect: Vec3(0.23125, 0.23125, 0.23125),
+        dreflect: Vec3(0.2775, 0.2775, 0.2775),
+        sreflect: Vec3(0.773911, 0.773911, 0.773911),
+        intensities: Vec3::ZEROS,
     };
 }
-
-// impl LightConfig {
-//     pub fn get_color_from_norm(&self, surface_normal: Vec3) -> RGB {
-//         let normaln = surface_normal.norm();
-//         let viewn = self.view.norm();
-//         let dirvecn = self.dir_vec.norm();
-
-//         let ndotdir: f64 = normaln.dot(dirvecn).max(0.);
-
-//         let iambient: Vec3 = self.areflect.mul_across(Vec3::from(self.ambient_color));
-//         let idiffuse: Vec3 = Vec3::from(self.dir_color).mul_across(self.dreflect) * ndotdir;
-//         let ispecular: Vec3 = Vec3::from(self.dir_color).mul_across(self.sreflect)
-//             * (((2 * normaln * ndotdir - dirvecn) * viewn).max(0.).powi(10));
-
-//         (iambient.limit(0., 255.) + idiffuse.limit(0., 255.) + ispecular.limit(0., 255.)).into()
-//     }
-
-//     pub const TEST_LIGHT: Self = Self {
-//         view: Vec3(0., 0., 1.),
-//         ambient_color: RGB {
-//             red: 50,
-//             green: 50,
-//             blue: 50,
-//         },
-//         dir_color: RGB {
-//             red: 252,
-//             green: 219,
-//             blue: 3,
-//         },
-//         dir_vec: Vec3(0.5, 0.75, 1.),
-//         areflect: Vec3(0.1, 0.1, 0.1),
-//         dreflect: Vec3(0.7, 0.7, 0.7),
-//         sreflect: Vec3(0.5, 0.5, 0.5),
-//     };
-// }
