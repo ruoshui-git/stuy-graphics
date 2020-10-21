@@ -130,7 +130,7 @@ Knobs/Animation
 "basename" name		- sets the base filename to save under.
 			  This should be used in conjunction with
 			  either vary or tween. For example,
-			  if "name" is R, then tween or vary might
+			  if name is "r", then tween or vary might
 			  save the images r01.miff, r02.miff etc.
 
 "set" knobname value	- sets a knobs value (in the symbol table).
