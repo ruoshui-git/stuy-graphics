@@ -284,7 +284,7 @@ fn parse_scale(input: &str) -> IResult<&str, Transform> {
         input,
         Transform::Scale {
             values: point,
-            knob: knob,
+            knob,
         },
     ))
 }
@@ -336,11 +336,11 @@ fn parse_torus(input: &str) -> IResult<&str, Shape> {
     Ok((
         input,
         Shape::Torus {
-            constants: constants,
+            constants,
             center,
             r0,
             r1,
-            coord: coord,
+            coord,
         },
     ))
 }

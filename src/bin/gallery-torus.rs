@@ -3,13 +3,13 @@ use graphics::{
     light::{fatt, Light},
     matrix::transform,
     processes::pipe_to_magick,
-    vector::Vec3, PPMImg, RGB,
+    processes::wait_for_magick,
+    vector::Vec3,
+    PPMImg, RGB,
 };
 
 fn main() {
     let mut magick = pipe_to_magick(vec!["ppm:-", "img.gif"]);
-
-    let mut magick_in = magick.stdin.take().unwrap();
 
     let lights = vec![
         Light::Ambient(RGB {
@@ -37,17 +37,18 @@ fn main() {
         },
         Light::Point {
             color: RGB {
-                red: 66, 
-                green: 147, 
+                red: 66,
+                green: 147,
                 blue: 245,
             },
             location: Vec3(250., 250., 0.),
             fatt: fatt::no_effect,
-        }
+        },
     ];
 
     let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 250))
         .with_lights(lights)
+        .with_writer(Box::new(magick.stdin.take().unwrap()))
         .build();
     drawer.transform_by(&transform::mv(250., 250., 0.));
     for rot in (0..360).step_by(5) {
@@ -55,16 +56,13 @@ fn main() {
         drawer.transform_by(&transform::rotatex(rot as f64));
         drawer.add_torus((0., 0., 0.), 30., 100., None);
 
-        drawer
-            .write_to_buf(&mut magick_in)
-            .expect("error writing to imagemagick");
+        drawer.flush().expect("error writing to imagemagick");
 
         drawer.clear();
         drawer.pop_matrix();
     }
-    drop(magick_in);
 
-    println!("Waiting for convert/magick to exit...");
-    let output = magick.wait().expect("Failed to wait on convert/magick");
-    println!("convert/magick {}", output);
+    drawer.finish().expect("error cleaning up drawer");
+
+    wait_for_magick(magick);
 }

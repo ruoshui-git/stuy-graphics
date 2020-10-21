@@ -119,12 +119,12 @@ fn exec_no_animation(
             Command::MiscCmd(cmd) => match cmd {
                 ast::Misc::SaveCoord(_) => warn_unimpl("save_coord_system", line),
                 ast::Misc::Camera { eye: _, aim: _ } => warn_unimpl("camera", line),
-                ast::Misc::Save(filepath) => drawer.save(&filepath).or_else(|e| {
-                    Err(EngineError::Runtime {
+                ast::Misc::Save(filepath) => {
+                    drawer.save(&filepath).map_err(|e| EngineError::Runtime {
                         line,
                         source: e.into(),
-                    })
-                })?,
+                    })?
+                }
                 ast::Misc::GenerateRayfiles => warn_unimpl("generate_rayfiles", line),
                 ast::Misc::Focal(_) => warn_unimpl("focal", line),
                 ast::Misc::Display => drawer.display(),
@@ -328,7 +328,8 @@ impl Interpreter {
                         if v.start_frame <= cur_frame && cur_frame <= v.end_frame {
                             let val = (v.end_val - v.start_val)
                                 / (v.end_frame as f64 - v.start_frame as f64)
-                                * (cur_frame - v.start_frame) as f64 + v.start_val;
+                                * (cur_frame - v.start_frame) as f64
+                                + v.start_val;
 
                             // override previous vary command if they overlap in frame numbers
                             if table.insert(v.knob.to_owned(), val).is_some() {

@@ -115,7 +115,7 @@ pub(crate) fn parse_file<T: AsRef<Path>>(path: T) -> EngineResult<ExecContext> {
                     //     knoblist1,
                     // } => {}
                     ast::Animate::Frames(f) => {
-                        if let Some(_) = frames {
+                        if frames.is_some() {
                             return Err(EngineError::Runtime {
                                 line: lnum,
                                 source: RuntimeError::MultipleFrameNumber,
@@ -138,23 +138,21 @@ pub(crate) fn parse_file<T: AsRef<Path>>(path: T) -> EngineResult<ExecContext> {
                     // ast::Animate::SaveKnobList(_) => {}
                     _ => cmd_list.push((lnum, Command::AnimateCmd(animate_cmd))),
                 }
-            } else {
-                if let Command::LightingCmd(lighting_cmd) = cmd {
-                    match lighting_cmd {
-                        ast::Lighting::Light {
-                            name: _,
-                            color: _,
-                            location: _,
-                        } => warn_unimpl("light", lnum),
-                        ast::Lighting::Ambient(_) => warn_unimpl("ambient", lnum),
-                        ast::Lighting::Constants { name, value } => {
-                            constants_table.insert(name, value.into());
-                        }
-                        ast::Lighting::Shading(_) => {}
+            } else if let Command::LightingCmd(lighting_cmd) = cmd {
+                match lighting_cmd {
+                    ast::Lighting::Light {
+                        name: _,
+                        color: _,
+                        location: _,
+                    } => warn_unimpl("light", lnum),
+                    ast::Lighting::Ambient(_) => warn_unimpl("ambient", lnum),
+                    ast::Lighting::Constants { name, value } => {
+                        constants_table.insert(name, value.into());
                     }
-                } else {
-                    cmd_list.push((lnum, cmd));
+                    ast::Lighting::Shading(_) => {}
                 }
+            } else {
+                cmd_list.push((lnum, cmd));
             }
         }
     }

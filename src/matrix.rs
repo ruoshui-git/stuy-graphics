@@ -33,7 +33,7 @@ impl Matrix {
         // col * self.nrows + row
     }
 
-    pub fn new_clone_vec(nrows: usize, ncols: usize, data: &Vec<f64>) -> Matrix {
+    pub fn new_clone_vec(nrows: usize, ncols: usize, data: &[f64]) -> Matrix {
         assert_eq!(
             nrows * ncols,
             data.len(),
@@ -43,7 +43,7 @@ impl Matrix {
         Matrix {
             nrows,
             ncols,
-            data: data.clone(),
+            data: data.to_owned(),
         }
     }
 
@@ -92,13 +92,13 @@ impl Matrix {
 // row and col iter
 impl Matrix {
     /// Iterate over a certain row
-    pub fn row_iter<'a>(&'a self, r: usize) -> impl Iterator<Item = &f64> {
+    pub fn row_iter(&self, r: usize) -> impl Iterator<Item = &f64> {
         let start = r * self.ncols;
         self.data[start..start + self.ncols].iter()
     }
 
     /// Iterate over a certain column
-    pub fn col_iter<'a>(&'a self, c: usize) -> impl Iterator<Item = &f64> {
+    pub fn col_iter(&self, c: usize) -> impl Iterator<Item = &f64> {
         self.data.iter().skip(c).step_by(self.ncols)
     }
 
@@ -210,17 +210,12 @@ impl Matrix {
     }
 
     /// Transforms self into an identity matrix
-    pub fn to_ident(&mut self) {
+    pub fn make_ident(&mut self) {
         let ncols = self.ncols;
         for (i, d) in self.data.iter_mut().enumerate() {
-            *d = if {
-                let (r, c) = Matrix::index_to_rc(i, ncols);
-                r == c
-            } {
-                1.0
-            } else {
-                0.0
-            }
+            let (r, c) = Matrix::index_to_rc(i, ncols);
+
+            *d = if r == c { 1.0 } else { 0.0 }
         }
     }
 }
@@ -342,11 +337,11 @@ mod tests {
         let mut m = Matrix::new(5, 5, vec![120.0; 25]);
         println!("m init: {}", m);
         println!("Mutating m...",);
-        m.to_ident();
+        m.make_ident();
         println!("m is now {}", m);
         assert!(matrix_equal(&m, &Matrix::ident(5)), "5 x 5 matrix");
         let mut m = Matrix::new(1, 1, vec![50.0]);
-        m.to_ident();
+        m.make_ident();
         assert!(
             matrix_equal(&m, &Matrix::ident(1)),
             "1 x 1 matrix edge case"

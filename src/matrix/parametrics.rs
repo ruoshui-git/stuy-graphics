@@ -23,12 +23,12 @@ impl Matrix {
         }
     }
 
-    /// Add a circle with center c `(x, y, z)` and radius `r`
-    pub fn add_circle(&mut self, c: (f64, f64, f64), r: f64) {
-        let (x, y, z) = c;
+    /// Add a circle with `center` and `radius`
+    pub fn add_circle(&mut self, center: (f64, f64, f64), radius: f64) {
+        let (x, y, z) = center;
         self.add_parametric(
-            |t: f64| r * (t * 2.0 * consts::PI).cos() + x,
-            |t: f64| r * (t * 2.0 * consts::PI).sin() + y,
+            |t: f64| radius * (t * 2.0 * consts::PI).cos() + x,
+            |t: f64| radius * (t * 2.0 * consts::PI).sin() + y,
             z,
             0.001,
         );

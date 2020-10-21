@@ -125,13 +125,13 @@ pub fn default_lights() -> Vec<Light> {
         },
         Light::Point {
             color: RGB {
-                red: 44, 
-                green: 156, 
+                red: 44,
+                green: 156,
                 blue: 73,
             },
-            location: Vec3(250., 0., 0.,),
+            location: Vec3(250., 0., 0.),
             fatt: fatt::no_effect,
-        }
+        },
     ]
 }
 

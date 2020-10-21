@@ -5,7 +5,7 @@ use std::{
     io::{self, prelude::Write},
 };
 // internal use
-use crate::{Canvas, RGB, processes::pipe_to_magick, utils};
+use crate::{processes::pipe_to_magick, utils, Canvas, RGB};
 use io::BufWriter;
 
 pub struct PPMImg {
@@ -70,9 +70,9 @@ impl PPMImg {
         writeln!(buf, "{} {} {}", self.width, self.height, self.depth)?;
         if self.depth < 256 {
             for t in self.data.iter() {
-                buf.write(&[t.red as u8])?;
-                buf.write(&[t.green as u8])?;
-                buf.write(&[t.blue as u8])?;
+                buf.write_all(&[t.red as u8])?;
+                buf.write_all(&[t.green as u8])?;
+                buf.write_all(&[t.blue as u8])?;
             }
         } else {
             for t in self.data.iter() {
@@ -152,7 +152,7 @@ impl Canvas for PPMImg {
     /// Plot a point on this PPMImg at (`x`, `y`, `z`)
     ///
     /// `z` is used for depth-buffer. Will only plot if `z` is closer to screen (new_z > existing_z).
-    fn plot(&mut self, x: i32, y: i32, z: f64, color: RGB) -> () {
+    fn plot(&mut self, x: i32, y: i32, z: f64, color: RGB) {
         // make the origin to be lower left corner
         let y = self.height as i32 - 1 - y;
         if let Some(index) = self.index(x, y) {
@@ -168,7 +168,6 @@ impl Canvas for PPMImg {
     fn height(&self) -> u32 {
         self.height
     }
-
 
     fn display(&self) {
         utils::display_ppm(&self);
@@ -204,7 +203,6 @@ impl Canvas for PPMImg {
         }
     }
 
-    
     fn write_to_buf<T: Write>(&self, writer: &mut T) -> io::Result<()> {
         self.write_bin_to_buf(writer)
     }

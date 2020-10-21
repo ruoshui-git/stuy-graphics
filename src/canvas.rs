@@ -316,8 +316,10 @@ pub trait Canvas {
     }
 
     fn draw_scanline(&mut self, p0: (f64, f64, f64), p1: (f64, f64, f64), color: RGB) {
-        assert!((p0.1 - p1.1).abs() < f64::EPSILON, "Scanline should be horizontal");
-
+        assert!(
+            (p0.1 - p1.1).abs() < f64::EPSILON,
+            "Scanline should be horizontal"
+        );
 
         // swap variables if needed, since we are always going from left to right
         let (p0, p1) = if p0.0 > p1.0 { (p1, p0) } else { (p0, p1) };
