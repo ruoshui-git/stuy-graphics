@@ -1,0 +1,13 @@
+// This file has few frames to allow faster debug for testing library features
+
+frames 2
+basename testlib
+push
+move 250 250 0
+scale 2 2 2 bigenator
+rotate y 360 spinny
+rotate z 360 spinny
+torus 0 0 0 75 125
+vary spinny 0 2 0 1
+vary bigenator 0 1 0 1
+vary bigenator 1 2 1 0
