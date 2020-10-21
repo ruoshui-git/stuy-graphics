@@ -2,7 +2,6 @@ use std::fmt;
 
 use crate::light::LightProps;
 
-
 #[derive(Debug, PartialEq)]
 pub enum Type {
     LightProps(LightProps),
@@ -44,19 +43,29 @@ impl From<&Type> for Kind {
 
 impl fmt::Display for Kind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "type::{}", match self {
-            Kind::Const => {"constants"}
-            Kind::Coord => {"coord_system"}
-            Kind::Knob => {"knob"}
-            Kind::KnobList => {"knoblist"}
-        })
+        write!(
+            f,
+            "type::{}",
+            match self {
+                Kind::Const => {
+                    "constants"
+                }
+                Kind::Coord => {
+                    "coord_system"
+                }
+                Kind::Knob => {
+                    "knob"
+                }
+                Kind::KnobList => {
+                    "knoblist"
+                }
+            }
+        )
     }
 }
 
-
 #[derive(Debug, PartialEq)]
 pub struct Knob(f64);
-
 
 /// Probably will be unused
 #[derive(Debug, PartialEq)]

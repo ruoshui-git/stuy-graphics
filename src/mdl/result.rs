@@ -17,8 +17,8 @@ pub enum EngineError {
         input: String,
         kind: nom::error::ErrorKind,
     },
-    #[error("symbol {name} is undefined")]
-    UndefinedSymbol { name: String },
+    #[error("symbol {name} is not found")]
+    SymbolNotFound { name: String },
     #[error("symbol {name} defined as {expected} but here used as {found}")]
     SymbolTypeMismatch {
         name: String,
@@ -33,6 +33,14 @@ pub enum EngineError {
 pub enum RuntimeError {
     #[error("io: {0}")]
     Io(#[from] io::Error),
+    #[error("multiple frame numbers defined")]
+    MultipleFrameNumber,
+    #[error("`vary` is present but `frames` is undefined")]
+    FramesUndefined,
+    #[error("semantics error: {0}")]
+    Semantics(&'static str),
+    #[error("{0}")]
+    Other(&'static str),
 }
 
 // #[derive(Error, Debug)]

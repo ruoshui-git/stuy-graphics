@@ -13,7 +13,7 @@ use nom::{
 };
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum Command {
+pub enum Command {
     Push,
     Pop,
     TransformCmd(Transform),
@@ -48,7 +48,7 @@ fn parse_comment(i: &str) -> IResult<&str, (&str, &str)> {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum Transform {
+pub enum Transform {
     Move {
         values: Point,
         knob: Option<Symbol>,
@@ -65,7 +65,7 @@ pub(crate) enum Transform {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum Shape {
+pub enum Shape {
     Sphere {
         constants: Option<Symbol>,
         center: Point,
@@ -102,7 +102,7 @@ pub(crate) enum Shape {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct Point(pub(crate) f64, pub(crate) f64, pub(crate) f64);
+pub struct Point(pub(crate) f64, pub(crate) f64, pub(crate) f64);
 
 impl Into<(f64, f64, f64)> for Point {
     fn into(self) -> (f64, f64, f64) {
@@ -110,8 +110,14 @@ impl Into<(f64, f64, f64)> for Point {
     }
 }
 
+impl Into<(f64, f64, f64)> for &Point {
+    fn into(self) -> (f64, f64, f64) {
+        (self.0, self.1, self.2)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum Animate {
+pub enum Animate {
     Basename(String),
     SetKnob {
         name: Symbol,
@@ -125,18 +131,12 @@ pub(crate) enum Animate {
         knoblist1: Symbol,
     },
     Frames(u32),
-    Vary {
-        knob: Symbol,
-        start_frame: u32,
-        end_frame: u32,
-        start_val: f64,
-        end_val: f64,
-    },
+    Vary(VaryInfo),
     SaveKnobList(Symbol),
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum Lighting {
+pub enum Lighting {
     Light {
         name: Symbol,
         color: Rgb,
@@ -150,10 +150,9 @@ pub(crate) enum Lighting {
     Shading(ShadingMode),
 }
 
-
 /// Same thing as light::LightProps, but this is for parsing types, that one is used by the engine
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct ObjConst {
+pub struct ObjConst {
     pub(crate) kar: f64,
     pub(crate) kdr: f64,
     pub(crate) ksr: f64,
@@ -168,9 +167,8 @@ pub(crate) struct ObjConst {
     pub(crate) ib: Option<f64>,
 }
 
-
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct Rgb {
+pub struct Rgb {
     r: f64,
     g: f64,
     b: f64,
@@ -187,7 +185,7 @@ impl From<Point> for Rgb {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub(crate) struct Symbol(pub(crate) String);
+pub struct Symbol(pub(crate) String);
 
 impl Symbol {
     fn from_opt(obj: Option<&str>) -> Option<Self> {
@@ -196,7 +194,16 @@ impl Symbol {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum ShadingMode {
+pub struct VaryInfo {
+    pub(crate) knob: Symbol,
+    pub(crate) start_frame: u32,
+    pub(crate) end_frame: u32,
+    pub(crate) start_val: f64,
+    pub(crate) end_val: f64,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum ShadingMode {
     Wireframe,
     Flat,
     Gouraud,
@@ -205,7 +212,7 @@ pub(crate) enum ShadingMode {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) enum Misc {
+pub enum Misc {
     SaveCoord(Symbol),
     Camera { eye: Point, aim: Point },
     Save(String),
@@ -231,7 +238,10 @@ fn triple_float(i: &str) -> IResult<&str, Point> {
 
 /// Parsing a symbol that starts with a letter and may contain underscores, letters and numbers
 fn symbol(input: &str) -> IResult<&str, &str> {
-    recognize(pair(alpha1, many0(alt((alphanumeric1, tag("-"), tag("."), tag("_"))))))(input)
+    recognize(pair(
+        alpha1,
+        many0(alt((alphanumeric1, tag("-"), tag("."), tag("_")))),
+    ))(input)
 }
 
 fn opt_symbol(i: &str) -> IResult<&str, Option<Symbol>> {
@@ -457,13 +467,13 @@ fn parse_vary(i: &str) -> IResult<&str, Animate> {
     ))(i)?;
     Ok((
         i,
-        Animate::Vary {
+        Animate::Vary(VaryInfo {
             knob: Symbol(knob.to_owned()),
             start_frame,
             end_frame,
             start_val,
             end_val,
-        },
+        }),
     ))
 }
 
