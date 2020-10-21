@@ -1,17 +1,46 @@
-
-
-use graphics::{matrix::transform as tr, processes::pipe_to_magick, Drawer, PPMImg, RGB};
+use graphics::{
+    drawer::DrawerBuilder,
+    light::{fatt, Light, LightProps},
+    matrix::transform as tr,
+    processes::{pipe_to_magick, wait_for_magick},
+    vector::Vec3,
+    PPMImg, RGB,
+};
 
 // # compilation:
 // cargo run --release
 
 fn main() {
-    let mut convert = pipe_to_magick(vec!["ppm:-", "img.gif"]);
+    let mut magick = pipe_to_magick(vec![
+        "-delay",
+        &format!("{}", 3.8),
+        "ppm:-",
+        "fakemotion-d3.8s2.gif",
+    ]);
 
-    // child should have a stdin, so we directly unwrap
-    let mut magick_in = convert.stdin.take().unwrap();
+    let lights_for_around: Vec<Light> = vec![
+        Light::Ambient(RGB {
+            red: 100,
+            green: 100,
+            blue: 50,
+        }),
+        // This should be yellow
+        Light::Point {
+            color: RGB {
+                red: 252,
+                green: 219,
+                blue: 3,
+            },
+            location: Vec3(250., 250., 0.),
+            fatt: fatt::no_effect,
+        },
+    ];
 
-    let mut drawer = Drawer::new(PPMImg::new(500, 500, 255));
+    let lights_for_center: Vec<Light> = vec![Light::Ambient(RGB {
+        red: 255,
+        green: 253,
+        blue: 237,
+    })];
 
     // colors!
     // let default_fg = drawer.get_fg_color();
@@ -21,7 +50,19 @@ fn main() {
     // let purple = RGB::new(209, 66, 245);
     let brown = RGB::new(212, 143, 78);
 
-    for rot in (0..360).into_iter().step_by(10) {
+    let center_props = LightProps {
+        areflect: Vec3(255., 255., 255.),
+        dreflect: Vec3(0.3425, 0.234, 0.23523),
+        sreflect: Vec3(0.24, 0.24, 0.24),
+        intensities: Vec3::ZEROS,
+    };
+
+    let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 255))
+        .with_writer(Box::new(magick.stdin.take().unwrap()))
+        .with_lights(lights_for_around.clone())
+        .build();
+
+    for rot in (0..360).into_iter().step_by(2) {
         // let mut stack: Vec<Matrix> = Vec::<Matrix>::new_stack();
 
         // moving to the center
@@ -36,7 +77,10 @@ fn main() {
                 drawer.transform_by(
                     &(tr::rotatex(rot as f64) * tr::rotatey(rot as f64) * tr::rotatez(rot as f64)),
                 );
-                drawer.add_sphere((0., 0., 0.), 40.);
+
+                drawer.env_lights = lights_for_center.clone();
+                drawer.add_sphere((0., 0., 0.), 40., Some(&center_props));
+                drawer.env_lights = lights_for_around.clone();
             }
             drawer.pop_matrix();
 
@@ -44,7 +88,7 @@ fn main() {
             drawer.push_matrix();
             {
                 drawer.transform_by(&(tr::rotatez(45.) * tr::rotatey(rot as f64)));
-                drawer.add_torus((0., 0., 0.), 10., 70.);
+                drawer.add_torus((0., 0., 0.), 10., 70., Some(&LightProps::BRASS));
             }
             drawer.pop_matrix();
 
@@ -60,7 +104,7 @@ fn main() {
                     drawer.transform_by(&tr::rotatex(rot as f64));
                     drawer.transform_by(&tr::rotatey(rot as f64));
                     drawer.fg_color = magenta;
-                    drawer.add_sphere((0., 0., 0.), 30.);
+                    drawer.add_sphere((0., 0., 0.), 30., Some(&LightProps::POLISHED_COPPER));
                 }
                 drawer.pop_matrix();
 
@@ -70,7 +114,7 @@ fn main() {
                     drawer.transform_by(&tr::rotatex(rot as f64 * 3.)); // <- var here
                     drawer.transform_by(&tr::mv(0., 80., 0.));
                     drawer.fg_color = light_yellow;
-                    drawer.add_sphere((0., 0., 0.), 20.);
+                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::POLISHED_SILVER));
 
                     // drawer.transform_by(&);
                     drawer.transform_by(
@@ -79,7 +123,7 @@ fn main() {
                             * tr::rotatez(-45.)),
                     );
                     drawer.fg_color = brown;
-                    drawer.add_torus((0., 0., 0.), 5., 40.);
+                    drawer.add_torus((0., 0., 0.), 5., 40., Some(&LightProps::GOLD));
                 }
                 drawer.pop_matrix();
 
@@ -88,7 +132,7 @@ fn main() {
                 {
                     drawer.transform_by(&tr::rotatex(rot as f64 * 3.));
                     drawer.transform_by(&tr::mv(0., -80., 0.));
-                    drawer.add_sphere((0., 0., 0.), 20.);
+                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::BRASS));
                 }
                 drawer.pop_matrix();
             }
@@ -99,14 +143,14 @@ fn main() {
                 drawer.transform_by(&tr::rotatez(rot as f64)); // <- var here
                 drawer.transform_by(&tr::mv(-200., 0., 0.));
 
-                drawer.add_sphere((0., 0., 0.), 30.);
+                drawer.add_sphere((0., 0., 0.), 30., Some(&LightProps::POLISHED_GOLD));
 
                 drawer.push_matrix();
                 {
                     drawer.transform_by(&tr::rotatez(-rot as f64 * 3.));
                     drawer.transform_by(&tr::mv(80., 0., 0.));
 
-                    drawer.add_sphere((0., 0., 0.), 20.);
+                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::SILVER));
                 }
                 drawer.pop_matrix();
 
@@ -115,7 +159,7 @@ fn main() {
                     drawer.transform_by(&tr::rotatez(-rot as f64 * 3.));
                     drawer.transform_by(&tr::mv(-80., 0., 0.));
 
-                    drawer.add_sphere((0., 0., 0.), 20.);
+                    drawer.add_sphere((0., 0., 0.), 20., None);
                 }
                 drawer.pop_matrix();
             }
@@ -123,16 +167,13 @@ fn main() {
         }
         drawer.pop_matrix();
 
-        drawer
-            .write_to_buf(&mut magick_in)
-            .expect("Error writing img data");
+        drawer.flush().expect("Error writing img data");
 
         drawer.clear();
     }
 
-    drop(magick_in);
+    drawer.finish().expect("Error writing img data");
 
     println!("Waiting for convert/magick to exit...");
-    let output = convert.wait().expect("Failed to wait on convert/magick");
-    println!("convert/magick {}", output);
+    println!("convert/magick {}", wait_for_magick(magick));
 }
