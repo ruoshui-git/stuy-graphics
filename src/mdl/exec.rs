@@ -1,9 +1,6 @@
 use indicatif::ProgressBar;
 
-use crate::{
-    light::LightProps,
-    matrix::transform as tr, Drawer, Matrix, PPMImg,
-};
+use crate::{light::LightProps, matrix::transform as tr, Drawer, Matrix, PPMImg};
 
 use super::{
     ast::{self, Command, Symbol},
