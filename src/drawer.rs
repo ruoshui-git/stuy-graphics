@@ -3,7 +3,10 @@ use crate::{
     matrix::Matrix,
     Canvas, RGB,
 };
-use std::io::{self, Cursor, Write};
+use std::{
+    io::{self, Cursor, Write},
+    process::ExitStatus,
+};
 
 pub mod turtle;
 /// A procedural interface to simplfy drawing
@@ -123,7 +126,7 @@ impl<T: Canvas> Drawer<T> {
         self.stack = new_stack();
     }
 
-    pub fn save(&self, filepath: &str) -> io::Result<()> {
+    pub fn save(&self, filepath: &str) -> io::Result<ExitStatus> {
         self.canvas.save(filepath)
     }
 

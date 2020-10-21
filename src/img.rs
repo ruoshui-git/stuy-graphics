@@ -1,11 +1,11 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, process::ExitStatus};
 
 use std::{
     fmt::Debug,
     io::{self, prelude::Write},
 };
 // internal use
-use crate::{processes::pipe_to_magick, utils, Canvas, RGB};
+use crate::{processes::pipe_to_magick, processes::wait_for_magick, utils, Canvas, RGB};
 use io::BufWriter;
 
 pub struct PPMImg {
@@ -183,24 +183,21 @@ impl Canvas for PPMImg {
         self.zbuf = vec![f64::NEG_INFINITY; (self.height * self.width).try_into().unwrap()];
     }
 
-    fn save(&self, filepath: &str) -> io::Result<()> {
-        // convert to .png if wanted
-        if filepath.ends_with(".ppm") {
-            self.write_binary(filepath)
-        } else {
-            let mut process = pipe_to_magick(vec!["ppm:-", filepath]);
+    fn save(&self, filepath: &str) -> io::Result<ExitStatus> {
+        // // convert to .png if wanted
+        // if filepath.ends_with(".ppm") {
+        //     self.write_binary(filepath)
+        // } else {
+        let mut process = pipe_to_magick(vec!["ppm:-", filepath]);
 
-            // This cmd should have a stdnin, so it's ok to unwrap
-            let mut stdin = process.stdin.take().unwrap();
-            self.write_bin_to_buf(&mut stdin)?;
+        // This cmd should have a stdnin, so it's ok to unwrap
+        let mut stdin = process.stdin.take().unwrap();
+        self.write_bin_to_buf(&mut stdin)?;
 
-            drop(stdin);
-            println!("Waiting for convert/magick to exit...");
-            let output = process.wait().expect("Failed to wait on convert/magick");
-            println!("convert/magick {}", output);
+        drop(stdin);
 
-            Ok(())
-        }
+        Ok(wait_for_magick(process))
+        // }
     }
 
     fn write_to_buf<T: Write>(&self, writer: &mut T) -> io::Result<()> {

@@ -8,7 +8,7 @@ use crate::{
     vector::Vec3,
     RGB,
 };
-use std::io;
+use std::{io, process::ExitStatus};
 
 pub trait Canvas {
     /// Plot a point on the screen at (`x`, `y`, `z`)
@@ -17,7 +17,7 @@ pub trait Canvas {
     // fn index(&self, x: i32, y: i32) -> Option<usize>;
     fn width(&self) -> u32;
     fn height(&self) -> u32;
-    fn save(&self, filepath: &str) -> io::Result<()>;
+    fn save(&self, filepath: &str) -> io::Result<ExitStatus>;
     fn write_to_buf<T: io::Write>(&self, writer: &mut T) -> io::Result<()>;
 
     /// Display the image with imagemagick
