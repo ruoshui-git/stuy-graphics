@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_variables)]
 
 pub mod ast;
+pub mod exec;
 pub mod parser;
 pub mod result;
 pub mod types;
@@ -8,276 +9,21 @@ mod utils;
 
 use std::{path::Path, path::PathBuf};
 
+use indicatif::{ProgressBar, ProgressStyle};
+
 use crate::{
     drawer::DrawerBuilder,
     light::LightProps,
-    matrix::transform as tr,
     processes::{pipe_to_magick, wait_for_magick},
-    Drawer, Matrix, PPMImg,
+    utils as gfxutils, PPMImg,
 };
 
 use self::{
-    ast::Command,
-    ast::Symbol,
-    ast::VaryInfo,
+    ast::{Command, VaryInfo},
+    exec::{exec_no_animation, exec_once_with_animation},
     parser::{parse_file, SymTable},
-    result::EngineError,
     result::EngineResult,
-    utils::{warn_disabled_in_animation, warn_unimpl},
 };
-
-fn exec_no_animation(
-    commands: Vec<(usize, Command)>,
-    basename: &str,
-    script: &[String],
-    light_props: &SymTable<LightProps>,
-) -> EngineResult<()> {
-    // let mut magick = pipe_to_magick(vec!["ppm:-", &format!("{}.png", basename)]);
-    // let magick_in = magick.stdin.take().unwrap();
-
-    let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 255))
-        // .with_writer(Box::new(magick_in))
-        .build();
-
-    for (line, cmd) in commands {
-        match cmd {
-            Command::Push => drawer.push_matrix(),
-            Command::Pop => drawer.pop_matrix(),
-            Command::TransformCmd(transform) => drawer.transform_by(&match transform {
-                ast::Transform::Move { values, knob: _ } => tr::mv(values.0, values.1, values.2),
-                ast::Transform::Scale { values, knob: _ } => {
-                    tr::scale(values.0, values.1, values.2)
-                }
-                ast::Transform::Rotate {
-                    axis,
-                    degrees,
-                    knob: _,
-                } => match axis {
-                    'x' => tr::rotatex(degrees),
-                    'y' => tr::rotatey(degrees),
-
-                    'z' => tr::rotatez(degrees),
-                    _ => unreachable!(),
-                },
-            }),
-            Command::ShapeCmd(shape) => match shape {
-                ast::Shape::Sphere {
-                    constants,
-                    center,
-                    r,
-                    coord,
-                } => drawer.add_sphere(center.into(), r, light_props.find(&constants)?),
-                ast::Shape::Torus {
-                    constants,
-                    center,
-                    r0,
-                    r1,
-                    coord,
-                } => drawer.add_torus(center.into(), r0, r1, light_props.find(&constants)?),
-                ast::Shape::Box {
-                    constants,
-                    corner,
-                    height,
-                    width,
-                    depth,
-                    coord,
-                } => drawer.add_box(
-                    corner.into(),
-                    width,
-                    height,
-                    depth,
-                    light_props.find(&constants)?,
-                ),
-                ast::Shape::Line {
-                    constants,
-                    point0,
-                    coord0,
-                    point1,
-                    coord1,
-                } => drawer.draw_line(point0.into(), point1.into()),
-                ast::Shape::Mesh {
-                    constants: _,
-                    filename: _,
-                    coord: _,
-                } => warn_unimpl("mesh", line),
-            },
-            Command::AnimateCmd(a) => match a {
-                ast::Animate::Basename(_) => unreachable!(),
-                ast::Animate::SetKnob { name: _, value: _ } => warn_unimpl("set_knob", line),
-                ast::Animate::SetAllKnobs(_) => warn_unimpl("set_knobs", line),
-                ast::Animate::Tween {
-                    start_frame: _,
-                    end_frame: _,
-                    knoblist0: _,
-                    knoblist1: _,
-                } => warn_unimpl("tween", line),
-                ast::Animate::Frames(_) => unreachable!(),
-                ast::Animate::Vary(_) => unreachable!(),
-                ast::Animate::SaveKnobList(_) => warn_unimpl("save_knoblist", line),
-            },
-            Command::LightingCmd(_) => unreachable!(),
-            Command::MiscCmd(cmd) => match cmd {
-                ast::Misc::SaveCoord(_) => warn_unimpl("save_coord_system", line),
-                ast::Misc::Camera { eye: _, aim: _ } => warn_unimpl("camera", line),
-                ast::Misc::Save(filepath) => {
-                    drawer.save(&filepath).map_err(|e| EngineError::Runtime {
-                        line,
-                        source: e.into(),
-                    })?
-                }
-                ast::Misc::GenerateRayfiles => warn_unimpl("generate_rayfiles", line),
-                ast::Misc::Focal(_) => warn_unimpl("focal", line),
-                ast::Misc::Display => drawer.display(),
-            },
-        }
-    }
-
-    Ok(())
-}
-
-fn transform_with_knob(
-    knobs: &SymTable<f64>,
-    op_symbol: &Option<Symbol>,
-    run_with_knob: impl Fn(&f64) -> Matrix,
-    run_without_knob: impl Fn() -> Matrix,
-) -> EngineResult<Matrix> {
-    Ok(match knobs.find(op_symbol) {
-        Ok(op_knob) => {
-            if let Some(knob) = op_knob {
-                run_with_knob(knob)
-            } else {
-                run_without_knob()
-            }
-        }
-        Err(e) => match e {
-            EngineError::SymbolNotFound { name } => {
-                eprintln!(
-                    "knob {} not found, ignoring this knob and applying static transformation",
-                    name
-                );
-                run_without_knob()
-            }
-            other => return Err(other),
-        },
-    })
-}
-
-fn exec_once_with_animation(
-    commands: &[(usize, Command)],
-    script: &[String],
-    knobs: &SymTable<f64>,
-    drawer: &mut Drawer<PPMImg>,
-    light_props: &SymTable<LightProps>,
-) -> EngineResult<()> {
-    for (line, cmd) in commands {
-        match cmd {
-            Command::Push => drawer.push_matrix(),
-            Command::Pop => drawer.pop_matrix(),
-            Command::TransformCmd(transform) => drawer.transform_by(&match transform {
-                ast::Transform::Move { values, knob } => transform_with_knob(
-                    knobs,
-                    knob,
-                    |knob| tr::mv(values.0 * knob, values.1 * knob, values.2 * knob),
-                    || tr::mv(values.0, values.1, values.2),
-                )?,
-                ast::Transform::Scale { values, knob } => transform_with_knob(
-                    knobs,
-                    knob,
-                    |knob| tr::scale(values.0 * knob, values.1 * knob, values.2 * knob),
-                    || tr::scale(values.0, values.1, values.2),
-                )?,
-                ast::Transform::Rotate {
-                    axis,
-                    degrees,
-                    knob,
-                } => transform_with_knob(
-                    knobs,
-                    knob,
-                    |knob| match axis {
-                        'x' => tr::rotatex(knob * degrees),
-                        'y' => tr::rotatey(knob * degrees),
-
-                        'z' => tr::rotatez(knob * degrees),
-                        _ => unreachable!(),
-                    },
-                    || match axis {
-                        'x' => tr::rotatex(*degrees),
-                        'y' => tr::rotatey(*degrees),
-
-                        'z' => tr::rotatez(*degrees),
-                        _ => unreachable!(),
-                    },
-                )?,
-            }),
-            Command::ShapeCmd(shape) => match shape {
-                ast::Shape::Sphere {
-                    constants,
-                    center,
-                    r,
-                    coord,
-                } => drawer.add_sphere(center.into(), *r, light_props.find(&constants)?),
-                ast::Shape::Torus {
-                    constants,
-                    center,
-                    r0,
-                    r1,
-                    coord,
-                } => drawer.add_torus(center.into(), *r0, *r1, light_props.find(&constants)?),
-                ast::Shape::Box {
-                    constants,
-                    corner,
-                    height,
-                    width,
-                    depth,
-                    coord,
-                } => drawer.add_box(
-                    corner.into(),
-                    *width,
-                    *height,
-                    *depth,
-                    light_props.find(&constants)?,
-                ),
-                ast::Shape::Line {
-                    constants,
-                    point0,
-                    coord0,
-                    point1,
-                    coord1,
-                } => drawer.draw_line(point0.into(), point1.into()),
-                ast::Shape::Mesh {
-                    constants: _,
-                    filename: _,
-                    coord: _,
-                } => warn_unimpl("mesh", *line),
-            },
-            Command::AnimateCmd(a) => match a {
-                ast::Animate::Basename(_) => unreachable!(),
-                ast::Animate::SetKnob { name: _, value: _ } => warn_unimpl("set_knob", *line),
-                ast::Animate::SetAllKnobs(_) => warn_unimpl("set_knobs", *line),
-                ast::Animate::Tween {
-                    start_frame: _,
-                    end_frame: _,
-                    knoblist0: _,
-                    knoblist1: _,
-                } => warn_unimpl("tween", *line),
-                ast::Animate::Frames(_) => unreachable!(),
-                ast::Animate::Vary(_) => unreachable!(),
-                ast::Animate::SaveKnobList(_) => warn_unimpl("save_knoblist", *line),
-            },
-            Command::LightingCmd(_) => unreachable!(),
-            Command::MiscCmd(cmd) => match cmd {
-                ast::Misc::SaveCoord(_) => warn_unimpl("save_coord_system", *line),
-                ast::Misc::Camera { eye: _, aim: _ } => warn_unimpl("camera", *line),
-                ast::Misc::Save(_) => warn_disabled_in_animation("save"),
-                ast::Misc::GenerateRayfiles => warn_unimpl("generate_rayfiles", *line),
-                ast::Misc::Focal(_) => warn_unimpl("focal", *line),
-                ast::Misc::Display => warn_disabled_in_animation("display"),
-            },
-        }
-    }
-
-    Ok(())
-}
 
 /// MDL Interpreter for a single file
 pub struct Interpreter {
@@ -310,6 +56,10 @@ impl Interpreter {
     }
 
     pub fn run(&self) -> EngineResult<()> {
+        let pgbar = ProgressBar::new_spinner().with_style(gfxutils::shark_spinner_style());
+        pgbar.set_message("Parsing file");
+        pgbar.enable_steady_tick(120);
+
         match parse_file(&self.filename)? {
             ExecContext::Animation {
                 cmd_list,
@@ -319,6 +69,7 @@ impl Interpreter {
                 script,
                 light_props,
             } => {
+                pgbar.set_message("Computing animation knobs");
                 // second pass, compute all knob values for each frame
                 let mut knob_states: Vec<SymTable<f64>> = vec![];
 
@@ -344,12 +95,22 @@ impl Interpreter {
                     knob_states.push(table);
                 }
 
-                let mut magick =
-                    pipe_to_magick(vec!["-delay", "1.7", "ppm:-", &format!("{}.gif", basename)]);
+                let fout_name = format!("{}.gif", basename);
+
+                let mut magick = pipe_to_magick(vec!["-delay", "1.7", "ppm:-", &fout_name]);
                 let writer = magick.stdin.take().unwrap();
                 let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 255))
                     .with_writer(Box::new(writer))
                     .build();
+
+                pgbar.finish_and_clear();
+                let render_pg = ProgressBar::new(knob_states.len() as u64).with_style(
+                    ProgressStyle::default_bar().template(
+                        "\t[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}",
+                    ),
+                );
+                render_pg.set_message("Rendering frames");
+
                 for knob_state in knob_states.iter() {
                     exec_once_with_animation(
                         &cmd_list,
@@ -361,17 +122,37 @@ impl Interpreter {
                     drawer.flush()?;
                     drawer.reset_stack();
                     drawer.clear();
+                    render_pg.inc(1);
                 }
 
                 drawer.finish()?;
-                wait_for_magick(magick);
+
+                render_pg.finish_and_clear();
+                let magick_pg = ProgressBar::new_spinner()
+                    .with_style(ProgressStyle::default_spinner().template(""));
+                magick_pg.enable_steady_tick(120);
+                // magick_pg.tick();
+
+                magick_pg.set_style(gfxutils::shark_spinner_style());
+                magick_pg.set_message("Waiting for magick gif generation");
+                let status = wait_for_magick(magick);
+                magick_pg.finish_with_message(&format!(
+                    "Done. `magick` {}. Animation saved as \"{}\"",
+                    status, fout_name
+                ));
             }
             ExecContext::NoAnimation {
                 script,
                 cmd_list,
                 basename,
                 light_props,
-            } => exec_no_animation(cmd_list, basename.as_str(), &script, &light_props)?,
+            } => {
+                let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 255)).build();
+                pgbar.println("\tAnimation not detected. Rendering still image.");
+                // pgbar.set_message("Drawing image");
+                exec_no_animation(cmd_list, &script, &light_props, &mut drawer, &pgbar)?;
+                pgbar.finish_with_message("Done.");
+            }
         }
 
         Ok(())

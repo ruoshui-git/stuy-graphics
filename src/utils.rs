@@ -2,6 +2,8 @@ use std::fs::File;
 
 use std::path::Path;
 
+use indicatif::ProgressStyle;
+
 use crate::{
     canvas::Canvas,
     light::{self, LightProps},
@@ -101,4 +103,40 @@ pub fn mapper(instart: f64, inend: f64, outstart: f64, outend: f64) -> impl Fn(f
     let slope = (outend - outstart) / (inend - instart);
     // move values into closure so they are captured by value, not ref
     move |x| outstart + slope * (x - instart)
+}
+
+/// Use this spinner at 120 ms
+///
+/// https://github.com/sindresorhus/cli-spinners/blob/07c83e7b9d8a08080d71ac8bda2115c83501d9d6/spinners.json#L1158
+pub fn shark_spinner_style() -> ProgressStyle {
+    ProgressStyle::default_spinner()
+        .template("\t[{elapsed}] {spinner:.green} {wide_msg}")
+        .tick_strings(&[
+            "▐|\\____________▌",
+            "▐_|\\___________▌",
+            "▐__|\\__________▌",
+            "▐___|\\_________▌",
+            "▐____|\\________▌",
+            "▐_____|\\_______▌",
+            "▐______|\\______▌",
+            "▐_______|\\_____▌",
+            "▐________|\\____▌",
+            "▐_________|\\___▌",
+            "▐__________|\\__▌",
+            "▐___________|\\_▌",
+            "▐____________|\\▌",
+            "▐____________/|▌",
+            "▐___________/|_▌",
+            "▐__________/|__▌",
+            "▐_________/|___▌",
+            "▐________/|____▌",
+            "▐_______/|_____▌",
+            "▐______/|______▌",
+            "▐_____/|_______▌",
+            "▐____/|________▌",
+            "▐___/|_________▌",
+            "▐__/|__________▌",
+            "▐_/|___________▌",
+            "▐/|____________▌",
+        ])
 }
