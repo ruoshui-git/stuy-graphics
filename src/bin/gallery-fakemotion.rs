@@ -51,10 +51,11 @@ fn main() {
     let brown = RGB::new(212, 143, 78);
 
     let center_props = LightProps {
-        areflect: Vec3(255., 255., 255.),
-        dreflect: Vec3(0.3425, 0.234, 0.23523),
-        sreflect: Vec3(0.24, 0.24, 0.24),
+        ka: Vec3(255., 255., 255.),
+        kd: Vec3(0.3425, 0.234, 0.23523),
+        ks: Vec3(0.24, 0.24, 0.24),
         intensities: Vec3::ZEROS,
+        ns: 10.,
     };
 
     let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 255))

@@ -36,26 +36,32 @@ pub enum Light {
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct LightProps {
     /// ambient reflection rgb
-    pub areflect: Vec3,
+    pub ka: Vec3,
     /// diffuse reflection rgb
-    pub dreflect: Vec3,
+    pub kd: Vec3,
     /// specular reflection rgb
-    pub sreflect: Vec3,
+    pub ks: Vec3,
     /// rgb intensity (I guess it's the color of the obj)
     pub intensities: Vec3,
+    /// Shininess (i.e. specular hightlight (exponent))
+    ///
+    /// Defines the focus of specular highlights in the material. Ns values normally range from 0 to 1000, with a high value resulting in a tight, concentrated highlight.
+    pub ns: f64,
 }
 
 impl From<ObjConst> for LightProps {
     fn from(oc: ObjConst) -> Self {
         Self {
-            areflect: Vec3(oc.kar, oc.kag, oc.kab),
-            dreflect: Vec3(oc.kdr, oc.kdg, oc.kdb),
-            sreflect: Vec3(oc.ksr, oc.ksg, oc.ksb),
+            ka: Vec3(oc.kar, oc.kag, oc.kab),
+            kd: Vec3(oc.kdr, oc.kdg, oc.kdb),
+            ks: Vec3(oc.ksr, oc.ksg, oc.ksb),
             intensities: Vec3(
                 oc.ir.unwrap_or(0.),
                 oc.ig.unwrap_or(0.),
                 oc.ib.unwrap_or(0.),
             ),
+            // Default value
+            ns: 10.,
         }
     }
 }
@@ -76,7 +82,7 @@ pub fn compute_color(
         // lights are additive, so sum up all the effects of light on this surface
         color = (color
             + match light {
-                Light::Ambient(ambient) => props.areflect.mul_across(Vec3::from(ambient)),
+                Light::Ambient(ambient) => props.ka.mul_across(Vec3::from(ambient)),
                 Light::Point {
                     color: pt_color,
                     location: pt_location,
@@ -90,10 +96,10 @@ pub fn compute_color(
 
                     let ndotdir: f64 = normaln.dot(dirvecn).max(0.);
 
-                    let idiffuse: Vec3 = Vec3::from(pt_color).mul_across(props.dreflect) * ndotdir;
+                    let idiffuse: Vec3 = Vec3::from(pt_color).mul_across(props.kd) * ndotdir;
 
-                    let ispecular: Vec3 = Vec3::from(pt_color).mul_across(props.sreflect)
-                        * (((2 * normaln * ndotdir - dirvecn) * viewn).max(0.).powi(10));
+                    let ispecular: Vec3 = Vec3::from(pt_color).mul_across(props.ks)
+                        * (((2 * normaln * ndotdir - dirvecn) * viewn).max(0.).powf(props.ns));
 
                     (idiffuse.limit(0., 255.) + ispecular.limit_max(255.))
                         * intensity_from_distance(dirvec.mag())
@@ -146,55 +152,58 @@ pub mod fatt {
 
 impl LightProps {
     pub const DEFAULT_PROPS: Self = Self {
-        areflect: Vec3(0.3, 0.3, 0.3),
-        dreflect: Vec3(0.5, 0.5, 0.5),
-        sreflect: Vec3(0.5, 0.5, 0.5),
+        ka: Vec3(0.3, 0.3, 0.3),
+        kd: Vec3(0.5, 0.5, 0.5),
+        ks: Vec3(0.5, 0.5, 0.5),
         intensities: Vec3::ZEROS,
+        ns: 10.,
     };
 
     pub const BRASS: Self = Self {
-        areflect: Vec3(0.329412, 0.223529, 0.027451),
-        dreflect: Vec3(0.780392, 0.568627, 0.113725),
-        sreflect: Vec3(0.992157, 0.941176, 0.807843),
+        ka: Vec3(0.329412, 0.223529, 0.027451),
+        kd: Vec3(0.780392, 0.568627, 0.113725),
+        ks: Vec3(0.992157, 0.941176, 0.807843),
         intensities: Vec3::ZEROS,
-        // shininess: 27.8974,
+        ns: 27.8974,
     };
 
     pub const POLISHED_COPPER: Self = Self {
-        areflect: Vec3(0.2295, 0.08825, 0.0275),       // a=1
-        dreflect: Vec3(0.5508, 0.2118, 0.066),         // a=1
-        sreflect: Vec3(0.580594, 0.223257, 0.0695701), // a=1
+        ka: Vec3(0.2295, 0.08825, 0.0275),       // a=1
+        kd: Vec3(0.5508, 0.2118, 0.066),         // a=1
+        ks: Vec3(0.580594, 0.223257, 0.0695701), // a=1
         intensities: Vec3::ZEROS,
-        // shininess: 51.2
+        ns: 51.2,
     };
 
     pub const GOLD: Self = Self {
-        areflect: Vec3(0.24725, 0.1995, 0.0745),      // a=1
-        dreflect: Vec3(0.75164, 0.60648, 0.22648),    // a=1
-        sreflect: Vec3(0.628281, 0.555802, 0.366065), // a=1
-        // shininess: 51.2
+        ka: Vec3(0.24725, 0.1995, 0.0745),      // a=1
+        kd: Vec3(0.75164, 0.60648, 0.22648),    // a=1
+        ks: Vec3(0.628281, 0.555802, 0.366065), // a=1
         intensities: Vec3::ZEROS,
+        ns: 51.2,
     };
 
     pub const POLISHED_GOLD: Self = Self {
-        areflect: Vec3(0.24725, 0.2245, 0.0645),
-        dreflect: Vec3(0.34615, 0.3143, 0.0903),
-        sreflect: Vec3(0.797357, 0.723991, 0.208006),
+        ka: Vec3(0.24725, 0.2245, 0.0645),
+        kd: Vec3(0.34615, 0.3143, 0.0903),
+        ks: Vec3(0.797357, 0.723991, 0.208006),
         intensities: Vec3::ZEROS,
+        ns: 83.2,
     };
 
     pub const SILVER: Self = Self {
-        areflect: Vec3(0.19225, 0.19225, 0.19225),    //a=1
-        dreflect: Vec3(0.50754, 0.50754, 0.50754),    //a=1
-        sreflect: Vec3(0.508273, 0.508273, 0.508273), //a=1
+        ka: Vec3(0.19225, 0.19225, 0.19225),    //a=1
+        kd: Vec3(0.50754, 0.50754, 0.50754),    //a=1
+        ks: Vec3(0.508273, 0.508273, 0.508273), //a=1
         intensities: Vec3::ZEROS,
-        // shininess: 51.2
+        ns: 51.2,
     };
 
     pub const POLISHED_SILVER: Self = Self {
-        areflect: Vec3(0.23125, 0.23125, 0.23125),
-        dreflect: Vec3(0.2775, 0.2775, 0.2775),
-        sreflect: Vec3(0.773911, 0.773911, 0.773911),
+        ka: Vec3(0.23125, 0.23125, 0.23125),
+        kd: Vec3(0.2775, 0.2775, 0.2775),
+        ks: Vec3(0.773911, 0.773911, 0.773911),
         intensities: Vec3::ZEROS,
+        ns: 83.2,
     };
 }

@@ -150,7 +150,7 @@ pub enum Lighting {
     Shading(ShadingMode),
 }
 
-/// Same thing as light::LightProps, but this is for parsing types, that one is used by the engine
+/// Same thing as light::LightProps, but this is for parsing types, `LightProps` is used by the engine
 #[derive(Debug, PartialEq, Clone)]
 pub struct ObjConst {
     pub(crate) kar: f64,
