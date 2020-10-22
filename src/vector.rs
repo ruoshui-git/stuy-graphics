@@ -1,4 +1,4 @@
-use crate::RGB;
+use crate::{Matrix, RGB};
 use std::ops;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -48,6 +48,19 @@ impl Vec3 {
             self.2 * other.0 - self.0 * other.2,
             self.0 * other.1 - self.1 * other.0,
         )
+    }
+
+    pub fn transform_by(&self, tr_matrix: &Matrix) -> Self {
+        let mut selfm = Matrix::new_edge_matrix();
+        selfm.append_row(&mut vec![self.0, self.1, self.2, 1.]);
+        let new_m = selfm * tr_matrix;
+        match new_m.iter_by_row().next() {
+            Some(point) => {
+                let w = point[3];
+                Vec3(point[0] / w, point[1] / w, point[2] / w)
+            }
+            None => panic!("error occurred when transforming a vec3. This should not happen."),
+        }
     }
 
     pub fn from_pt(point: (f64, f64, f64)) -> Self {
@@ -121,6 +134,21 @@ impl ops::Add for Vec3 {
     type Output = Vec3;
     fn add(self, rhs: Self) -> Self::Output {
         Vec3(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+    }
+}
+
+impl ops::Add<f64> for Vec3 {
+    type Output = Vec3;
+    fn add(self, rhs: f64) -> Self::Output {
+        Vec3(self.0 + rhs, self.1 + rhs, self.2 + rhs)
+    }
+}
+
+impl ops::AddAssign<f64> for Vec3 {
+    fn add_assign(&mut self, rhs: f64) {
+        self.0 += rhs;
+        self.1 += rhs;
+        self.2 += rhs;
     }
 }
 

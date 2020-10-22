@@ -102,7 +102,7 @@ impl<T: Canvas> Drawer<T> {
             .render_polygon_matrix(&(m * self.get_top_matrix()), props, &self.env_lights)
     }
 
-    fn get_top_matrix(&self) -> &Matrix {
+    pub fn get_top_matrix(&self) -> &Matrix {
         self.stack
             .last()
             .expect("Error trying to get the last stack")

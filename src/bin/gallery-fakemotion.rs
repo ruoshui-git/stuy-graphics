@@ -1,6 +1,8 @@
+use std::{env, process};
+
 use graphics::{
     drawer::DrawerBuilder,
-    light::{fatt, Light, LightProps},
+    light::{Light, LightProps},
     matrix::transform as tr,
     processes::{pipe_to_magick, wait_for_magick},
     vector::Vec3,
@@ -11,56 +13,80 @@ use graphics::{
 // cargo run --release
 
 fn main() {
-    let mut magick = pipe_to_magick(vec![
-        "-delay",
-        &format!("{}", 3.8),
-        "ppm:-",
-        "fakemotion-d3.8s2.gif",
-    ]);
+    let args: Vec<String> = env::args().collect();
+
+    let default_fname = "fakemotion-d3.8s2.gif";
+    let (filename, _use_magick) = match args.len() {
+        1 => (default_fname, true),
+        2 => (args[1].as_str(), true),
+        _ => {
+            eprintln!("./program [output-name] [-no-m]");
+            process::exit(1);
+        }
+    };
+
+    let mut magick = pipe_to_magick(vec!["-delay", &format!("{}", 3.8), "ppm:-", filename]);
 
     let lights_for_around: Vec<Light> = vec![
-        Light::Ambient(RGB {
-            red: 100,
-            green: 100,
-            blue: 50,
-        }),
+        Light::Ambient(RGB::new(100, 100, 50)),
         // This should be yellow
         Light::Point {
-            color: RGB {
-                red: 252,
-                green: 219,
-                blue: 3,
-            },
+            color: RGB::new(255, 234, 99),
+            // color: RGB::new(255, 234, 99),
+            // color: RGB::WHITE,
             location: Vec3(250., 250., 0.),
-            fatt: fatt::no_effect,
+            fatt: |distance: f64| 50_000. / (distance * distance),
         },
     ];
 
-    let lights_for_center: Vec<Light> = vec![Light::Ambient(RGB {
-        red: 255,
-        green: 253,
-        blue: 237,
-    })];
+    let illuminator0 = Light::Point {
+        color: RGB::new(222, 205, 20),
+        location: Vec3(0., 0., 0.),
+        fatt: |d| 6000. / (d * d),
+    };
 
-    // colors!
-    // let default_fg = drawer.get_fg_color();
-    let light_yellow = RGB::new(245, 236, 66);
-    // let blue = RGB::new(66, 135, 245);
-    let magenta = RGB::new(239, 66, 245);
-    // let purple = RGB::new(209, 66, 245);
-    let brown = RGB::new(212, 143, 78);
+    let illuminator1 = Light::Point {
+        // color: RGB::WHITE,
+            color: RGB::new(252, 219, 3),
+        // position will be transformed later
+        location: Vec3(0., 0., 0.),
+        fatt: |_| 2.,
+    };
+
+    let lights_for_center: Vec<Light> = vec![Light::Ambient(RGB::new(255, 253, 237))];
+
+    let lights_for_ilum0 = &[Light::Ambient(RGB::new(255, 100, 51))];
+
+    let lights_for_ilum1 = &[Light::Ambient(RGB::new(252, 219, 3))];
 
     let center_props = LightProps {
-        ka: Vec3(255., 255., 255.),
+        ka: Vec3(0.98, 0.98, 0.98),
         kd: Vec3(0.3425, 0.234, 0.23523),
         ks: Vec3(0.24, 0.24, 0.24),
         intensities: Vec3::ZEROS,
         ns: 10.,
     };
 
+    let mut center_ring_props = LightProps::BRASS;
+    center_ring_props.ks += -0.6;
+    center_ring_props.kd += -0.3;
+    // center_ring_props.ns -= 20.;
+
+    let mut ilum0_props = LightProps::POLISHED_COPPER;
+    ilum0_props.ka += 1.;
+    ilum0_props.kd += 3.;
+    ilum0_props.ks += 5.; //Vec3(0.780594, 0.423257, 0.2695701);
+    ilum0_props.ns += 20.;
+
+    let mut ilum1_props = LightProps::POLISHED_GOLD;
+    ilum1_props.ka += 0.8;
+    ilum1_props.kd += 1.;
+    ilum1_props.ks += 2.;
+    ilum1_props.ns += 10.;
+
     let mut drawer = DrawerBuilder::new(PPMImg::new(500, 500, 255))
         .with_writer(Box::new(magick.stdin.take().unwrap()))
-        .with_lights(lights_for_around.clone())
+        .with_lights(lights_for_around)
         .build();
 
     for rot in (0..360).into_iter().step_by(2) {
@@ -79,9 +105,10 @@ fn main() {
                     &(tr::rotatex(rot as f64) * tr::rotatey(rot as f64) * tr::rotatez(rot as f64)),
                 );
 
+                let tmp_lights = drawer.env_lights;
                 drawer.env_lights = lights_for_center.clone();
                 drawer.add_sphere((0., 0., 0.), 40., Some(&center_props));
-                drawer.env_lights = lights_for_around.clone();
+                drawer.env_lights = tmp_lights;
             }
             drawer.pop_matrix();
 
@@ -89,7 +116,7 @@ fn main() {
             drawer.push_matrix();
             {
                 drawer.transform_by(&(tr::rotatez(45.) * tr::rotatey(rot as f64)));
-                drawer.add_torus((0., 0., 0.), 10., 70., Some(&LightProps::BRASS));
+                drawer.add_torus((0., 0., 0.), 10., 70., Some(&center_ring_props));
             }
             drawer.pop_matrix();
 
@@ -104,17 +131,26 @@ fn main() {
                 {
                     drawer.transform_by(&tr::rotatex(rot as f64));
                     drawer.transform_by(&tr::rotatey(rot as f64));
-                    drawer.fg_color = magenta;
-                    drawer.add_sphere((0., 0., 0.), 30., Some(&LightProps::POLISHED_COPPER));
+
+                    drawer.env_lights.extend_from_slice(lights_for_ilum0);
+                    drawer.add_sphere((0., 0., 0.), 30., Some(&ilum0_props));
+                    for _ in 0..lights_for_ilum0.len() {
+                        drawer.env_lights.pop();
+                    }
                 }
                 drawer.pop_matrix();
+
+                // Lights for the first group of satellites
+                let mut moving = illuminator0;
+                moving.transform_by(drawer.get_top_matrix());
+                drawer.env_lights.push(moving);
 
                 // draw 1st satellite
                 drawer.push_matrix();
                 {
                     drawer.transform_by(&tr::rotatex(rot as f64 * 3.)); // <- var here
                     drawer.transform_by(&tr::mv(0., 80., 0.));
-                    drawer.fg_color = light_yellow;
+                    // drawer.fg_color = light_yellow;
                     drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::POLISHED_SILVER));
 
                     // drawer.transform_by(&);
@@ -123,7 +159,7 @@ fn main() {
                             * tr::rotatex(rot as f64 * 4.)
                             * tr::rotatez(-45.)),
                     );
-                    drawer.fg_color = brown;
+                    // drawer.fg_color = brown;
                     drawer.add_torus((0., 0., 0.), 5., 40., Some(&LightProps::GOLD));
                 }
                 drawer.pop_matrix();
@@ -133,9 +169,11 @@ fn main() {
                 {
                     drawer.transform_by(&tr::rotatex(rot as f64 * 3.));
                     drawer.transform_by(&tr::mv(0., -80., 0.));
-                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::BRASS));
+                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::TURQUOISE));
                 }
                 drawer.pop_matrix();
+
+                drawer.env_lights.pop();
             }
             drawer.pop_matrix();
 
@@ -144,14 +182,23 @@ fn main() {
                 drawer.transform_by(&tr::rotatez(rot as f64)); // <- var here
                 drawer.transform_by(&tr::mv(-200., 0., 0.));
 
-                drawer.add_sphere((0., 0., 0.), 30., Some(&LightProps::POLISHED_GOLD));
+                drawer.env_lights.extend_from_slice(lights_for_ilum1);
+                drawer.add_sphere((0., 0., 0.), 30., Some(&ilum1_props));
+                for _ in 0..lights_for_ilum1.len() {
+                    drawer.env_lights.pop();
+                }
+
+                // the moving light should be transformed here
+                let mut moving = illuminator1;
+                moving.transform_by(drawer.get_top_matrix());
+                drawer.env_lights.push(moving);
 
                 drawer.push_matrix();
                 {
                     drawer.transform_by(&tr::rotatez(-rot as f64 * 3.));
                     drawer.transform_by(&tr::mv(80., 0., 0.));
 
-                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::SILVER));
+                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::JADE));
                 }
                 drawer.pop_matrix();
 
@@ -160,11 +207,16 @@ fn main() {
                     drawer.transform_by(&tr::rotatez(-rot as f64 * 3.));
                     drawer.transform_by(&tr::mv(-80., 0., 0.));
 
-                    drawer.add_sphere((0., 0., 0.), 20., None);
+                    drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::PEARL));
                 }
                 drawer.pop_matrix();
+
+                drawer.env_lights.pop();
             }
             drawer.pop_matrix();
+
+            // moving light removed
+            // lights_for_around.pop();
         }
         drawer.pop_matrix();
 

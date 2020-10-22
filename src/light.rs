@@ -1,4 +1,4 @@
-use crate::{mdl::ast::ObjConst, vector::Vec3, RGB};
+use crate::{mdl::ast::ObjConst, vector::Vec3, Matrix, RGB};
 
 /// Represents lighting configuration
 #[derive(Copy, Clone, Debug)]
@@ -86,7 +86,7 @@ pub fn compute_color(
                 Light::Point {
                     color: pt_color,
                     location: pt_location,
-                    fatt: intensity_from_distance,
+                    fatt,
                 } => {
                     // deal with diffuse and specular reflections here
 
@@ -99,10 +99,11 @@ pub fn compute_color(
                     let idiffuse: Vec3 = Vec3::from(pt_color).mul_across(props.kd) * ndotdir;
 
                     let ispecular: Vec3 = Vec3::from(pt_color).mul_across(props.ks)
-                        * (((2 * normaln * ndotdir - dirvecn) * viewn).max(0.).powf(props.ns));
+                        * (((2 * normaln * ndotdir - dirvecn) * viewn)
+                            .max(0.)
+                            .powf(props.ns));
 
-                    (idiffuse.limit(0., 255.) + ispecular.limit_max(255.))
-                        * intensity_from_distance(dirvec.mag())
+                    (idiffuse.limit(0., 255.) + ispecular.limit_max(255.)) * fatt(dirvec.mag())
                 }
             }
             .limit(0., 255.))
@@ -141,12 +142,38 @@ pub fn default_lights() -> Vec<Light> {
     ]
 }
 
-/// Point light intensity functions
+impl Light {
+    pub fn transform_by(&mut self, m: &Matrix) {
+        match self {
+            // ambient lights don't move
+            Light::Ambient(_) => {}
+            Light::Point {
+                color: _,
+                location,
+                fatt: _,
+            } => {
+                *location = location.transform_by(m);
+            }
+        }
+    }
+}
+
+/// Point light falloff (attenuation) functions
 pub mod fatt {
 
     /// distance of light has no effect on intensity
     pub fn no_effect(_distance: f64) -> f64 {
         1.
+    }
+
+    /// intensity in proportion to 1/d
+    pub fn invlinear(distance: f64) -> f64 {
+        10. / distance
+    }
+
+    /// intensity in proportion to 1/(d*d)
+    pub fn invsq(distance: f64) -> f64 {
+        10000. / (distance * distance)
     }
 }
 
@@ -205,5 +232,29 @@ impl LightProps {
         ks: Vec3(0.773911, 0.773911, 0.773911),
         intensities: Vec3::ZEROS,
         ns: 83.2,
+    };
+
+    pub const JADE: Self = Self {
+        ka: Vec3(0.135, 0.2225, 0.1575),
+        kd: Vec3(0.54, 0.89, 0.63),
+        ks: Vec3(0.316228, 0.316228, 0.316228),
+        ns: 12.8,
+        intensities: Vec3::ZEROS,
+    };
+
+    pub const PEARL: Self = Self {
+        ka: Vec3(0.25, 0.20725, 0.20725),
+        kd: Vec3(1., 0.829, 0.829),
+        ks: Vec3(0.296648, 0.296648, 0.296648),
+        ns: 11.264,
+        intensities: Vec3::ZEROS,
+    };
+
+    pub const TURQUOISE: Self = Self {
+        ka: Vec3(0.1, 0.18725, 0.1745),
+        kd: Vec3(0.396, 0.74151, 0.69102),
+        ks: Vec3(0.297254, 0.30829, 0.306678),
+        ns: 12.8,
+        intensities: Vec3::ZEROS,
     };
 }
