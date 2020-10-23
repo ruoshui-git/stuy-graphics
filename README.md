@@ -1,3 +1,29 @@
+# Final Project
+
+### Eternal Return of Fakemotion
+
+![Eternal Return of Fakemotion](./products/final-eternal-return-fakemotion-5x10e5.gif)
+
++ Point light falloff
+
+### Eternal Return round 2
+
+![Eternal Return Round 2](./products/final-eternal-return-1-18fps-s2.gif)
+
++ 2 moving lights
+
+### Eternal Return round 3
+
+![Eternal Return Round 3](./products/final-fakemotion-d6s2-streches.gif)
+
++ Weird Orbits
+
+## Changes
+
+1. Support customized specular hightlight (Ns). This is impl-ed as exponent in specular reflection calculation.
+2. Add more light attenuation functions (inv_sq, inv_linear)
+
+
 # Work 11 - Animation
 
 ![3rd return of fakemotion](./products/w11-3rd-return-of-fakemotion-d3.8s2.gif)
