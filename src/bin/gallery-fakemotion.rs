@@ -200,7 +200,7 @@ fn main() {
 
                 drawer.transform_by(&tr::rotatez(-3. * rot as f64));
 
-                let distance = 80. + (rot as f64).sin() * 3. * fun;
+                let distance = 80. + (rot as f64 * PI / 36.).sin() * 3. * fun;
                 drawer.push_matrix();
                 {
                     drawer.transform_by(&tr::mv(distance, 0., 0.));
