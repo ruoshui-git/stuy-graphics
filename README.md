@@ -18,6 +18,10 @@
 
 + Weird Orbits
 
+### Also this
+
+![Eternal Return Bouncy](./products/accidents/fakemotion-d6s2-funny.gif)
+
 ## Changes
 
 1. Support customized specular hightlight (Ns). This is impl-ed as exponent in specular reflection calculation.
