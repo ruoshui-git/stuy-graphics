@@ -1,4 +1,4 @@
-use std::{env, process};
+use std::{env, f64::consts::{E, PI}, process};
 
 use graphics::{
     drawer::DrawerBuilder,
@@ -25,7 +25,7 @@ fn main() {
         }
     };
 
-    let mut magick = pipe_to_magick(vec!["-delay", &format!("{}", 3.8), "ppm:-", filename]);
+    let mut magick = pipe_to_magick(vec!["-delay", &format!("{}", 6), "ppm:-", filename]);
 
     let lights_for_around: Vec<Light> = vec![
         Light::Ambient(RGB::new(100, 100, 50)),
@@ -145,10 +145,14 @@ fn main() {
                 moving.transform_by(drawer.get_top_matrix());
                 drawer.env_lights.push(moving);
 
+
+                // the first two satellites will rotate a bit
+                drawer.transform_by(&tr::rotatex(rot as f64 * 3.)); // <- var here
+                drawer.transform_by(&tr::rotatez((rot as f64 * std::f64::consts::PI / (36.)).sin() * 30.));
+                
                 // draw 1st satellite
                 drawer.push_matrix();
                 {
-                    drawer.transform_by(&tr::rotatex(rot as f64 * 3.)); // <- var here
                     drawer.transform_by(&tr::mv(0., 80., 0.));
                     // drawer.fg_color = light_yellow;
                     drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::POLISHED_SILVER));
@@ -167,7 +171,6 @@ fn main() {
                 // 2nd satellite
                 drawer.push_matrix();
                 {
-                    drawer.transform_by(&tr::rotatex(rot as f64 * 3.));
                     drawer.transform_by(&tr::mv(0., -80., 0.));
                     drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::TURQUOISE));
                 }
@@ -193,10 +196,14 @@ fn main() {
                 moving.transform_by(drawer.get_top_matrix());
                 drawer.env_lights.push(moving);
 
+                let fun =  10. * E.powf(-(((rot - 180) as f64 / (30. * PI)).powi(2)))-0.60624944523;
+
+                drawer.transform_by(&tr::rotatez(-3. * rot as f64));
+
+                let distance = 80. + (rot as f64).sin() * 3. * fun;
                 drawer.push_matrix();
                 {
-                    drawer.transform_by(&tr::rotatez(-rot as f64 * 3.));
-                    drawer.transform_by(&tr::mv(80., 0., 0.));
+                    drawer.transform_by(&tr::mv(distance, 0., 0.));
 
                     drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::JADE));
                 }
@@ -204,9 +211,8 @@ fn main() {
 
                 drawer.push_matrix();
                 {
-                    drawer.transform_by(&tr::rotatez(-rot as f64 * 3.));
-                    drawer.transform_by(&tr::mv(-80., 0., 0.));
-
+                    // drawer.transform_by(&tr::rotatez(-rot as f64 * 3.));
+                    drawer.transform_by(&tr::mv(-distance, 0., 0.));
                     drawer.add_sphere((0., 0., 0.), 20., Some(&LightProps::PEARL));
                 }
                 drawer.pop_matrix();
@@ -229,4 +235,5 @@ fn main() {
 
     println!("Waiting for convert/magick to exit...");
     println!("convert/magick {}", wait_for_magick(magick));
+    println!("File name: {}", filename);
 }
